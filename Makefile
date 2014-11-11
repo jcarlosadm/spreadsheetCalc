@@ -3,7 +3,7 @@
 # diretórios dos objetos e do binário
 # tenha certeza de configurar a localização do binário nas opções de execução do eclipse
 OBJ_DIR= objects
-BIN_DIR= bin
+#BIN_DIR= bin
 
 # coloque aqui a lista de objetos do programa
 _OBJ= main.o
@@ -30,16 +30,13 @@ MK_DIR= mkdir -p
 .PHONY: makedir_objects
 .PHONY: makedir_bin
 
-all: makedir_objects makedir_bin $(BIN_NAME)
+all: makedir_objects $(BIN_NAME)
 
 makedir_objects:
 	$(MK_DIR) $(OBJ_DIR)
 
-makedir_bin:
-	$(MK_DIR) $(BIN_DIR)
-
 $(BIN_NAME): $(OBJ)
-	$(CC) -o $(BIN_DIR)/$@ $^
+	$(CC) -o $@ $^
 
 # modelo para cada objeto diferente de main
 #$(OBJ_DIR)/date.o: dateC/date.c $(DEP_DATE)
@@ -50,4 +47,4 @@ $(OBJ_DIR)/main.o: main.c $(DEP_MAIN)
 
 .PHONY: clean
 clean:
-	rm -rf $(OBJ_DIR)/*.o $(BIN_DIR)/$(BIN_NAME)
+	rm -rf $(OBJ_DIR)/*.o $(BIN_NAME)
