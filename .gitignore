@@ -1,7 +1,6 @@
 
 /bin/*
 /objects/*
-/main.c
 /html/*
 /latex/*
 .settings/*

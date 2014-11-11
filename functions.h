@@ -6,6 +6,8 @@
 #ifndef FUNCTIONS_H_
 #define FUNCTIONS_H_
 
+#include <stdio.h>
+
 /**
  * Lista funções disponíveis para o usuário
  */
