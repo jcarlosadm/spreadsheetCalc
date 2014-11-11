@@ -3,6 +3,8 @@ spreadsheetCalc
 
 Electronic spreadsheet in command line
 
+Obs: this is a project class.
+
 Modules Diagrams
 ----------
 [BeginSystem](https://www.dropbox.com/s/bz7eqhir2eh2gve/beginSystem.pdf?dl=0)
