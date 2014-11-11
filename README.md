@@ -32,6 +32,6 @@ Using doxygen.
 
 Configuration files: doxygen_config and mainpage.dox.
 
-Making docs: 'doxygen doxygen_config'
+Making docs: `doxygen doxygen_config`
 
 
