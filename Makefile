@@ -3,7 +3,6 @@
 # diretórios dos objetos e do binário
 # tenha certeza de configurar a localização do binário nas opções de execução do eclipse
 OBJ_DIR= objects
-#BIN_DIR= bin
 
 # coloque aqui a lista de objetos do programa
 _OBJ= main.o

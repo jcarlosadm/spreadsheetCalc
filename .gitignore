@@ -1,7 +1,12 @@
-/main.c
+
 /bin/*
-main
 /objects/*
+/main.c
+/html/*
+/latex/*
+.settings/*
+
 .cproject
 .project
-.settings/*
+
+main

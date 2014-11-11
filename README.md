@@ -22,3 +22,14 @@ Modules Diagrams
 [StackDouble](https://www.dropbox.com/s/aksmgjwnlqqnhh7/Stack%20Double.pdf?dl=0)
 
 [Functions](https://www.dropbox.com/s/y9ag0vx7yag5j1u/M%C3%B3dulo%20Functions.pdf?dl=0)
+
+Documentation
+-------------
+
+Using doxygen.
+
+Configuration files: doxygen_config and mainpage.dox.
+
+Making docs: 'doxygen doxygen_config'
+
+
