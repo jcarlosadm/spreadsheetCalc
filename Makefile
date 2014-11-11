@@ -5,11 +5,12 @@
 OBJ_DIR= objects
 
 # coloque aqui a lista de objetos do programa
-_OBJ= main.o
+_OBJ= functions.o main.o
 
-# coloque as depedências de header files de cada objeto (exceto o header do próprio objeto)
+# coloque as depedências de header files de cada objeto
 # veja o header file de cada objeto para uma pista dessas depedências
-DEP_MAIN= 
+DEP_MAIN= functions.h
+DEP_FUNCTIONS= functions.h
 
 # as flags e opções usadas
 CC= gcc
@@ -40,6 +41,9 @@ $(BIN_NAME): $(OBJ)
 # modelo para cada objeto diferente de main
 #$(OBJ_DIR)/date.o: dateC/date.c $(DEP_DATE)
 #	$(CC) $(CFLAGS) $< -o $@
+
+$(OBJ_DIR)/functions.o: functions.c $(DEP_FUNCTIONS)
+	$(CC) $(CFLAGS) $< -o $@
 
 $(OBJ_DIR)/main.o: main.c $(DEP_MAIN)
 	$(CC) $(CFLAGS) $< -o $@
