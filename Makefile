@@ -5,11 +5,12 @@
 OBJ_DIR= objects
 
 # coloque aqui a lista de objetos do programa
-_OBJ= functions.o main.o
+_OBJ= stack_double.o functions.o main.o
 
 # coloque as depedências de header files de cada objeto
 # veja o header file de cada objeto para uma pista dessas depedências
-DEP_MAIN= functions.h
+DEP_MAIN= stack_double.h
+DEP_STACKDOUBLE= stack_double.h
 DEP_FUNCTIONS= functions.h
 
 # as flags e opções usadas
@@ -41,6 +42,9 @@ $(BIN_NAME): $(OBJ)
 # modelo para cada objeto diferente de main
 #$(OBJ_DIR)/date.o: dateC/date.c $(DEP_DATE)
 #	$(CC) $(CFLAGS) $< -o $@
+
+$(OBJ_DIR)/stack_double.o: stack_double.c $(DEP_STACKDOUBLE)
+	$(CC) $(CFLAGS) $< -o $@
 
 $(OBJ_DIR)/functions.o: functions.c $(DEP_FUNCTIONS)
 	$(CC) $(CFLAGS) $< -o $@

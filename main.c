@@ -1,19 +1,25 @@
 /*
  * main.c
- *
+ * (temporariamente usada para testes)
  */
 
 #include <stdio.h>
-#include "functions.h"
+#include "stack_double.h"
 
 int main()
 {
-    //printf("hello world!\n");
-    listFunctions();
+    StackDouble* stack = StackDouble_create();
 
-    double myArray[] = {2.3, 5.3, 3, 7, 1, 9.4};
+    StackDouble_push(&stack, 4.5);
+    StackDouble_push(&stack, 3);
+    StackDouble_push(&stack, 9);
+    StackDouble_push(&stack, 1);
 
-    printf("min: %.2f\n", min(myArray, sizeof(myArray)/sizeof(double)));
+    printf("peek: %.2f\n", StackDouble_peek(&stack));
+    printf("pop: %.2f\n", StackDouble_pop(&stack));
+    printf("pop: %.2f\n", StackDouble_pop(&stack));
+
+    stack = StackDouble_free(stack);
 
     return 0;
 }
