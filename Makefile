@@ -5,11 +5,12 @@
 OBJ_DIR= objects
 
 # coloque aqui a lista de objetos do programa
-_OBJ= stack_double.o functions.o main.o
+_OBJ= undo_redo_cells.o stack_double.o functions.o main.o
 
 # coloque as depedências de header files de cada objeto
 # veja o header file de cada objeto para uma pista dessas depedências
-DEP_MAIN= stack_double.h
+DEP_MAIN= undo_redo_cells.h
+DEP_UNDOREDOCELLS= undo_redo_cells.h
 DEP_STACKDOUBLE= stack_double.h
 DEP_FUNCTIONS= functions.h
 
@@ -39,9 +40,8 @@ makedir_objects:
 $(BIN_NAME): $(OBJ)
 	$(CC) -o $@ $^
 
-# modelo para cada objeto diferente de main
-#$(OBJ_DIR)/date.o: dateC/date.c $(DEP_DATE)
-#	$(CC) $(CFLAGS) $< -o $@
+$(OBJ_DIR)/undo_redo_cells.o: undo_redo_cells.c $(DEP_UNDOREDOCELLS)
+	$(CC) $(CFLAGS) $< -o $@
 
 $(OBJ_DIR)/stack_double.o: stack_double.c $(DEP_STACKDOUBLE)
 	$(CC) $(CFLAGS) $< -o $@

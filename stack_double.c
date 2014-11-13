@@ -29,13 +29,13 @@ struct stackDouble{
  * Funções privadas
  ************************************************************/
 
-Element* freeElements(Element* element){
+Element* STACKDOUBLE_freeElements(Element* element){
     if(!element) return NULL;
 
     Element* prev = element;
     element = element->next;
     free(prev);
-    return freeElements(element);
+    return STACKDOUBLE_freeElements(element);
 }
 
 /************************************************************
@@ -63,7 +63,7 @@ StackDouble* STACKDOUBLE_create(){
 StackDouble* STACKDOUBLE_free(StackDouble* stackDouble){
     if(!stackDouble) return stackDouble;
 
-    stackDouble->top = freeElements(stackDouble->top);
+    stackDouble->top = STACKDOUBLE_freeElements(stackDouble->top);
     free(stackDouble);
     return NULL;
 }
