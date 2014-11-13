@@ -38,6 +38,9 @@ Using doxygen.
 
 Configuration files: doxygen_config and mainpage.dox.
 
+Temp doxygen_config: [link](https://www.dropbox.com/s/20tktph09rpjjdv/doxygen_config?dl=0)
+Temp mainpage.dox: [link](https://www.dropbox.com/s/hi1xussf23j2120/mainpage.dox?dl=0)
+
 Making docs: `doxygen doxygen_config`
 
 
