@@ -35,17 +35,36 @@ struct undoRedoCells{
  ****************************************************************************/
 
 /**
- * Libera memória de todos os elementos da fila
+ * Libera memória de todos os elementos da fila à direita da sentinela
  * \param element Primeiro elemento da fila
  */
-Element* UNDOREDOCELLS_freeElements(Element* element){
+Element* UNDOREDOCELLS_freeRightSentinel(Element* element){
     if(!element) return NULL;
 
     if(element->next){
         element = element->next;
         free(element->previous);
         element->previous = NULL;
-        return UNDOREDOCELLS_freeElements(element);
+        return UNDOREDOCELLS_freeRightSentinel(element);
+    }
+    else{
+        free(element);
+        return NULL;
+    }
+}
+
+/**
+ * Libera memória de todos os elementos da fila à esquerda da sentinela
+ * \param element Primeiro elemento da fila
+ */
+Element* UNDOREDOCELLS_freeLeftSentinel(Element* element){
+    if(!element) return NULL;
+
+    if(element->previous){
+        element = element->previous;
+        free(element->next);
+        element->next = NULL;
+        return UNDOREDOCELLS_freeLeftSentinel(element);
     }
     else{
         free(element);
@@ -85,7 +104,16 @@ UndoRedoCells* UNDOREDOCELLS_create(){
  * \param undoRedoCells Ponteiro para UndoRedoCells
  */
 UndoRedoCells* UNDOREDOCELLS_free(UndoRedoCells* undoRedoCells){
-    undoRedoCells->first = UNDOREDOCELLS_freeElements(undoRedoCells->first);
+    if(!undoRedoCells) return NULL;
+
+    undoRedoCells->sentinel->previous =
+            UNDOREDOCELLS_freeLeftSentinel(undoRedoCells->sentinel->previous);
+    undoRedoCells->sentinel->next =
+            UNDOREDOCELLS_freeRightSentinel(undoRedoCells->sentinel->next);
+
+    free(undoRedoCells->sentinel);
+
+    undoRedoCells->first = NULL;
     undoRedoCells->last = NULL;
     undoRedoCells->sentinel = NULL;
 
