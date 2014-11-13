@@ -14,6 +14,7 @@
  */
 typedef struct element Element;
 struct element{
+    int cellValue;
     char oldExpression[60];
     char newExpression[60];
     Element* next;
@@ -99,9 +100,10 @@ UndoRedoCells* UNDOREDOCELLS_free(UndoRedoCells* undoRedoCells){
  * \param undoRedoCells Ponteiro duplo para UndoRedoCells
  * \param oldExpression Expression anterior da célula
  * \param newExpression Nova expressão da célula
+ * \param cellValue Valor (posição) da célula
  */
 int UNDOREDOCELLS_newItem(UndoRedoCells** undoRedoCells, char* oldExpression,
-        char* newExpression){
+        char* newExpression, int cellValue){
     if(!(*undoRedoCells)) return 0;
 
     Element* newElement = malloc(sizeof(Element));
@@ -109,6 +111,7 @@ int UNDOREDOCELLS_newItem(UndoRedoCells** undoRedoCells, char* oldExpression,
 
     strcpy(newElement->oldExpression, oldExpression);
     strcpy(newElement->newExpression, newExpression);
+    newElement->cellValue = cellValue;
     newElement->next = NULL;
 
     // coloca novo elemento na posição correta
@@ -163,11 +166,13 @@ int UNDOREDOCELLS_canRedo(UndoRedoCells** undoRedoCells){
  * \return Retorna 1 em caso de sucesso, e 0 em caso de falha
  * \param undoRedoCells Ponteiro duplo para UndoRedoCells
  * \param expression Ponteiro para variável string a ser preenchida
+ * \param cellValue Variável a ser preenchida com a localização da célula
  */
-int UNDOREDOCELLS_undo(UndoRedoCells** undoRedoCells, char *expression){
+int UNDOREDOCELLS_undo(UndoRedoCells** undoRedoCells, char *expression, int *cellValue){
     if(!(*undoRedoCells) || !(*undoRedoCells)->last) return 0;
 
     strcpy(expression, (*undoRedoCells)->last->oldExpression);
+    *cellValue = (*undoRedoCells)->last->cellValue;
 
     (*undoRedoCells)->last = (*undoRedoCells)->last->previous;
 
@@ -201,11 +206,13 @@ int UNDOREDOCELLS_undo(UndoRedoCells** undoRedoCells, char *expression){
  * \return Retorna 1 em caso de sucesso, e 0 em caso de falha
  * \param undoRedoCells Ponteiro duplo para UndoRedoCells
  * \param expression Ponteiro para variável string a ser preenchida
+ * \param cellValue Variável a ser preenchida com a localização da célula
  */
-int UNDOREDOCELLS_redo(UndoRedoCells** undoRedoCells, char *expression){
+int UNDOREDOCELLS_redo(UndoRedoCells** undoRedoCells, char *expression, int *cellValue){
     if(!(*undoRedoCells) || !(*undoRedoCells)->first) return 0;
 
     strcpy(expression, (*undoRedoCells)->first->newExpression);
+    *cellValue = (*undoRedoCells)->first->cellValue;
 
     (*undoRedoCells)->first = (*undoRedoCells)->first->next;
 

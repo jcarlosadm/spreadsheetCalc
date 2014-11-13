@@ -34,9 +34,10 @@ UndoRedoCells* UNDOREDOCELLS_free(UndoRedoCells* undoRedoCells);
  * \param undoRedoCells Ponteiro duplo para UndoRedoCells
  * \param oldExpression Expression anterior da célula
  * \param newExpression Nova expressão da célula
+ * \param cellValue Valor (posição) da célula
  */
 int UNDOREDOCELLS_newItem(UndoRedoCells** undoRedoCells, char* oldExpression,
-        char* newExpression);
+        char* newExpression, int cellValue);
 
 /**
  * Verifica se é possível executar operação undo
@@ -57,15 +58,17 @@ int UNDOREDOCELLS_canRedo(UndoRedoCells** undoRedoCells);
  * \return Retorna 1 em caso de sucesso, e 0 em caso de falha
  * \param undoRedoCells Ponteiro duplo para UndoRedoCells
  * \param expression Ponteiro para variável string a ser preenchida
+ * \param cellValue Variável a ser preenchida com a localização da célula
  */
-int UNDOREDOCELLS_undo(UndoRedoCells** undoRedoCells, char *expression);
+int UNDOREDOCELLS_undo(UndoRedoCells** undoRedoCells, char *expression, int *cellValue);
 
 /**
  * Refaz última operação desfeita, retornando dados necessários
  * \return Retorna 1 em caso de sucesso, e 0 em caso de falha
  * \param undoRedoCells Ponteiro duplo para UndoRedoCells
  * \param expression Ponteiro para variável string a ser preenchida
+ * \param cellValue Variável a ser preenchida com a localização da célula
  */
-int UNDOREDOCELLS_redo(UndoRedoCells** undoRedoCells, char *expression);
+int UNDOREDOCELLS_redo(UndoRedoCells** undoRedoCells, char *expression, int *cellValue);
 
 #endif /* UNDO_REDO_CELLS_H_ */
