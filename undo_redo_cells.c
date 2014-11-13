@@ -14,7 +14,8 @@
  */
 typedef struct element Element;
 struct element{
-    char expression[60];
+    char oldExpression[60];
+    char newExpression[60];
     Element* next;
     Element* previous;
 };
@@ -91,4 +92,51 @@ UndoRedoCells* UNDOREDOCELLS_free(UndoRedoCells* undoRedoCells){
 
     return NULL;
 }
+
+/**
+ * Adiciona um novo item na lista undo (lista redo é apagada)
+ * \return Retorna 1 em caso de sucesso, ou 0 em caso de falha de alocação
+ * \param undoRedoCells Ponteiro duplo para UndoRedoCells
+ * \param oldExpression Expression anterior da célula
+ * \param newExpression Nova expressão da célula
+ */
+int UNDOREDOCELLS_newItem(UndoRedoCells** undoRedoCells, char* oldExpression,
+        char* newExpression){
+    if(!(*undoRedoCells)) return 0;
+
+    Element* newElement = malloc(sizeof(Element));
+    if(!newElement) return 0;
+
+    strcpy(newElement->oldExpression, oldExpression);
+    strcpy(newElement->newExpression, newExpression);
+    newElement->next = NULL;
+
+    // coloca novo elemento na posição correta
+    if(!(*undoRedoCells)->last){
+        (*undoRedoCells)->last = newElement;
+        (*undoRedoCells)->sentinel->next = newElement;
+        newElement->previous = (*undoRedoCells)->sentinel;
+    }
+    else{
+        (*undoRedoCells)->last->next = newElement;
+        newElement->previous = (*undoRedoCells)->last;
+        (*undoRedoCells)->last = (*undoRedoCells)->last->next;
+    }
+
+    // apaga elementos do começo da fila até a sentinela
+    while((*undoRedoCells)->first){
+        (*undoRedoCells)->first = (*undoRedoCells)->first->next;
+        free((*undoRedoCells)->first->previous);
+        (*undoRedoCells)->first->previous = NULL;
+
+        if((*undoRedoCells)->first == (*undoRedoCells)->sentinel)
+            (*undoRedoCells)->first = NULL;
+    }
+
+    return 1;
+}
+
+
+
+
 
