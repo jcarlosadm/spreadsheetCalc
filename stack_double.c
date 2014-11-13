@@ -46,7 +46,7 @@ Element* freeElements(Element* element){
  * Aloca pilha
  * \return Retorna ponteiro para a memória alocada, ou NULL em caso de falha
  */
-StackDouble* StackDouble_create(){
+StackDouble* STACKDOUBLE_create(){
     StackDouble* stackDouble = malloc(sizeof(StackDouble));
     if(!stackDouble) return NULL;
 
@@ -60,7 +60,7 @@ StackDouble* StackDouble_create(){
  * \return Retorna NULL
  * \param stackDouble Ponteiro para StackDouble
  */
-StackDouble* StackDouble_free(StackDouble* stackDouble){
+StackDouble* STACKDOUBLE_free(StackDouble* stackDouble){
     if(!stackDouble) return stackDouble;
 
     stackDouble->top = freeElements(stackDouble->top);
@@ -75,7 +75,7 @@ StackDouble* StackDouble_free(StackDouble* stackDouble){
  * \param stackDouble Ponteiro para StackDouble
  * \param value Valor a ser adicionado na pilha
  */
-int StackDouble_push(StackDouble** stackDouble, double value){
+int STACKDOUBLE_push(StackDouble** stackDouble, double value){
     if(!(*stackDouble)){
         printf("stack is NULL\n");
         return 0;
@@ -95,7 +95,7 @@ int StackDouble_push(StackDouble** stackDouble, double value){
  * \return Valor do elemento removido do topo da pilha
  * \param stackDouble Ponteiro duplo para StackDouble
  */
-double StackDouble_pop(StackDouble** stackDouble){
+double STACKDOUBLE_pop(StackDouble** stackDouble){
     if(!(*stackDouble)){
         printf("stack is NULL\n");
         return 0;
@@ -113,7 +113,7 @@ double StackDouble_pop(StackDouble** stackDouble){
  * \return Retorna valor do elemento do topo
  * \param stackDouble Ponteiro duplo para StackDouble
  */
-double StackDouble_peek(StackDouble** stackDouble){
+double STACKDOUBLE_peek(StackDouble** stackDouble){
     if(!(*stackDouble)){
         printf("stack is NULL\n");
         return 0;
@@ -127,6 +127,6 @@ double StackDouble_peek(StackDouble** stackDouble){
  * \return 1 se estiver vazia, ou 0 caso não esteja vazia
  * \param stackDouble Ponteiro duplo para StackDouble
  */
-int StackDouble_isEmpty(StackDouble** stackDouble){
+int STACKDOUBLE_isEmpty(StackDouble** stackDouble){
     return ((*stackDouble)->top == NULL);
 }

@@ -8,7 +8,7 @@
 /**
  * Lista funções disponíveis para o usuário
  */
-void listFunctions(){
+void FUNCTIONS_listFunctions(){
     printf("sum(value1, value2, ..., valueN) - soma uma lista de valores\n");
     printf("mean(value1, value2, ..., valueN) - calcula a media de uma lista de valores\n");
     printf("max(value1, value2, ..., valueN) - retorna o maior valor de uma lista de valores\n");
@@ -21,7 +21,7 @@ void listFunctions(){
  * \param values Ponteiro para o começo de um array de doubles
  * \param size Tamanho do array de doubles
  */
-double sum(double *values, int size){
+double FUNCTIONS_sum(double *values, int size){
     if(size<=0) return 0;
 
     double total=0;
@@ -37,10 +37,10 @@ double sum(double *values, int size){
  * \param values Ponteiro para o começo de um array de doubles
  * \param size Tamanho do array de doubles
  */
-double mean(double *values, int size){
+double FUNCTIONS_mean(double *values, int size){
     if(size<=0) return 0;
 
-    double total = sum(values, size);
+    double total = FUNCTIONS_sum(values, size);
     return (total/size);
 }
 
@@ -50,7 +50,7 @@ double mean(double *values, int size){
  * \param values Ponteiro para o começo de um array de doubles
  * \param size Tamanho do array de doubles
  */
-double max(double *values, int size){
+double FUNCTIONS_max(double *values, int size){
     if(size<=0) return 0;
 
     double value = values[0];
@@ -69,7 +69,7 @@ double max(double *values, int size){
  * \param values Ponteiro para o começo de um array de doubles
  * \param size Tamanho do array de doubles
  */
-double min(double *values, int size){
+double FUNCTIONS_min(double *values, int size){
     if(size <= 0) return 0;
 
     double value = values[0];

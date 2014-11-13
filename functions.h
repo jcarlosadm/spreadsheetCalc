@@ -11,7 +11,7 @@
 /**
  * Lista funções disponíveis para o usuário
  */
-void listFunctions();
+void FUNCTIONS_listFunctions();
 
 /**
  * Calcula a soma de uma lista de valores
@@ -19,7 +19,7 @@ void listFunctions();
  * \param values Ponteiro para o começo de um array de doubles
  * \param size Tamanho do array de doubles
  */
-double sum(double *values, int size);
+double FUNCTIONS_sum(double *values, int size);
 
 /**
  * Calcula a média de uma lista de valores
@@ -27,7 +27,7 @@ double sum(double *values, int size);
  * \param values Ponteiro para o começo de um array de doubles
  * \param size Tamanho do array de doubles
  */
-double mean(double *values, int size);
+double FUNCTIONS_mean(double *values, int size);
 
 /**
  * Procura pelo maior valor de uma lista de valores
@@ -35,7 +35,7 @@ double mean(double *values, int size);
  * \param values Ponteiro para o começo de um array de doubles
  * \param size Tamanho do array de doubles
  */
-double max(double *values, int size);
+double FUNCTIONS_max(double *values, int size);
 
 /**
  * Procura pelo menor valor de uma lista de valores
@@ -43,6 +43,6 @@ double max(double *values, int size);
  * \param values Ponteiro para o começo de um array de doubles
  * \param size Tamanho do array de doubles
  */
-double min(double *values, int size);
+double FUNCTIONS_min(double *values, int size);
 
 #endif /* FUNCTIONS_H_ */

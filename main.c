@@ -8,18 +8,18 @@
 
 int main()
 {
-    StackDouble* stack = StackDouble_create();
+    StackDouble* stack = STACKDOUBLE_create();
 
-    StackDouble_push(&stack, 4.5);
-    StackDouble_push(&stack, 3);
-    StackDouble_push(&stack, 9);
-    StackDouble_push(&stack, 1);
+    STACKDOUBLE_push(&stack, 4.5);
+    STACKDOUBLE_push(&stack, 3);
+    STACKDOUBLE_push(&stack, 9);
+    STACKDOUBLE_push(&stack, 1);
 
-    printf("peek: %.2f\n", StackDouble_peek(&stack));
-    printf("pop: %.2f\n", StackDouble_pop(&stack));
-    printf("pop: %.2f\n", StackDouble_pop(&stack));
+    printf("peek: %.2f\n", STACKDOUBLE_peek(&stack));
+    printf("pop: %.2f\n", STACKDOUBLE_pop(&stack));
+    printf("pop: %.2f\n", STACKDOUBLE_pop(&stack));
 
-    stack = StackDouble_free(stack);
+    stack = STACKDOUBLE_free(stack);
 
     return 0;
 }
