@@ -195,3 +195,39 @@ int UNDOREDOCELLS_undo(UndoRedoCells** undoRedoCells, char *expression){
 
     return 1;
 }
+
+/**
+ * Refaz última operação desfeita, retornando dados necessários
+ * \return Retorna 1 em caso de sucesso, e 0 em caso de falha
+ * \param undoRedoCells Ponteiro duplo para UndoRedoCells
+ * \param expression Ponteiro para variável string a ser preenchida
+ */
+int UNDOREDOCELLS_redo(UndoRedoCells** undoRedoCells, char *expression){
+    if(!(*undoRedoCells) || !(*undoRedoCells)->first) return 0;
+
+    strcpy(expression, (*undoRedoCells)->first->newExpression);
+
+    (*undoRedoCells)->first = (*undoRedoCells)->first->next;
+
+    if(!(*undoRedoCells)->last){
+
+        (*undoRedoCells)->last = (*undoRedoCells)->first->previous;
+        (*undoRedoCells)->last->previous = (*undoRedoCells)->sentinel;
+        (*undoRedoCells)->last->next = NULL;
+
+        (*undoRedoCells)->sentinel->next = (*undoRedoCells)->last;
+    }
+    else{
+        (*undoRedoCells)->last->next = (*undoRedoCells)->first->previous;
+        (*undoRedoCells)->last->next->previous = (*undoRedoCells)->last;
+        (*undoRedoCells)->last = (*undoRedoCells)->last->next;
+        (*undoRedoCells)->last->next = NULL;
+    }
+
+    (*undoRedoCells)->first->previous = NULL;
+
+    if((*undoRedoCells)->first == (*undoRedoCells)->sentinel)
+        (*undoRedoCells)->first = NULL;
+
+    return 1;
+}
