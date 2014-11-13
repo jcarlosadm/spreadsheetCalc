@@ -136,7 +136,62 @@ int UNDOREDOCELLS_newItem(UndoRedoCells** undoRedoCells, char* oldExpression,
     return 1;
 }
 
+/**
+ * Verifica se é possível executar operação undo
+ * \return Retorna 1 se puder executar undo, e 0 em caso contrário
+ * \param undoRedoCells Ponteiro duplo para UndoRedoCells
+ */
+int UNDOREDOCELLS_canUndo(UndoRedoCells** undoRedoCells){
+    if(!(*undoRedoCells)) return 0;
 
+    return ((*undoRedoCells)->last != NULL);
+}
 
+/**
+ * Verifica se é possível executar operação redo
+ * \return Retorna 1 se puder executar redo, e 0 em caso contrário
+ * \param undoRedoCells Ponteiro duplo para UndoRedoCells
+ */
+int UNDOREDOCELLS_canRedo(UndoRedoCells** undoRedoCells){
+    if(!(*undoRedoCells)) return 0;
 
+    return ((*undoRedoCells)->first != NULL);
+}
 
+/**
+ * Desfaz última operação feita pelo usuário, retornando dados necessários
+ * \return Retorna 1 em caso de sucesso, e 0 em caso de falha
+ * \param undoRedoCells Ponteiro duplo para UndoRedoCells
+ * \param expression Ponteiro para variável string a ser preenchida
+ */
+int UNDOREDOCELLS_undo(UndoRedoCells** undoRedoCells, char *expression){
+    if(!(*undoRedoCells) || !(*undoRedoCells)->last) return 0;
+
+    strcpy(expression, (*undoRedoCells)->last->oldExpression);
+
+    (*undoRedoCells)->last = (*undoRedoCells)->last->previous;
+
+    if(!(*undoRedoCells)->first){
+
+        (*undoRedoCells)->first = (*undoRedoCells)->last->next;
+        (*undoRedoCells)->first->next = (*undoRedoCells)->sentinel;
+        (*undoRedoCells)->first->previous = NULL;
+
+        (*undoRedoCells)->sentinel->previous = (*undoRedoCells)->first;
+
+    }
+    else{
+
+        (*undoRedoCells)->first->previous = (*undoRedoCells)->last->next;
+        (*undoRedoCells)->first->previous->next = (*undoRedoCells)->first;
+        (*undoRedoCells)->first = (*undoRedoCells)->first->previous;
+        (*undoRedoCells)->first->previous = NULL;
+    }
+
+    (*undoRedoCells)->last->next = NULL;
+
+    if((*undoRedoCells)->last == (*undoRedoCells)->sentinel)
+        (*undoRedoCells)->last = NULL;
+
+    return 1;
+}
