@@ -17,10 +17,10 @@ typedef struct binaryExpTree BinaryExpTree;
 
 /**
  * Cria uma árvore com apenas um nó, com filhos nulos
- * \return Ponteiro para BinaryExpTree
- * \param value Caractere guardado no único nó da árvore
+ * \return Ponteiro para BinaryExpTree, ou NULL em caso de falha de alocação
+ * \param value Valor double guardado no único nó da árvore
  */
-BinaryExpTree* BINARYEXPTREE_create(char value);
+BinaryExpTree* BINARYEXPTREE_create(double value);
 
 /**
  * Libera memória da árvore de expressão binária
@@ -31,13 +31,13 @@ BinaryExpTree* BINARYEXPTREE_free(BinaryExpTree* binaryExpTree);
 
 /**
  * Junta duas árvores de expressão binária sob um nó de valor específico
- * \return Ponteiro para uma árvore de expressão binária
+ * \return Ponteiro para uma árvore de expressão binária, ou NULL em caso de falha de alocação
  * \param left Ponteiro para a árvore a ser colocada como filho esquerdo da nova árvore
  * \param right Ponteiro para a árvore a ser colocada como filho direito da nova árvore
- * \param value Valor do nó pai das duas árvores
+ * \param symbol Caractere do nó pai das duas árvores
  */
 BinaryExpTree* BINARYEXPTREE_joinTrees(BinaryExpTree* left, BinaryExpTree* right,
-        char value);
+        char symbol);
 
 /**
  * Calcula expressão da árvore
