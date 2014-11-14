@@ -58,6 +58,8 @@ void BINARYEXPTREE_evalRecursive(BinaryExpTree** binaryExpTree, StackDouble** st
             else
                 STACKDOUBLE_push(&(*stack), value1);
             break;
+        default:
+            STACKDOUBLE_push(&(*stack), value1);
         }
     }
 }
