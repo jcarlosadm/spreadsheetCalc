@@ -23,12 +23,18 @@ struct binaryExpTree{
  * Funções privadas
  **********************************************************************/
 
+/**
+ * Calcula recursivamente o valor de uma árvore de expressão binária
+ */
 void BINARYEXPTREE_evalRecursive(BinaryExpTree** binaryExpTree, StackDouble** stack){
+
+    // percorre de maneira posfixa
     if((*binaryExpTree)->left)
         BINARYEXPTREE_evalRecursive(&(*binaryExpTree)->left, &(*stack));
     if((*binaryExpTree)->right)
         BINARYEXPTREE_evalRecursive(&(*binaryExpTree)->right, &(*stack));
 
+    // preenche pilha
     if((*binaryExpTree)->symbol=='v'){
         STACKDOUBLE_push(&(*stack), (*binaryExpTree)->value);
     }
