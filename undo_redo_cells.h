@@ -1,4 +1,4 @@
-/*
+/**
  * \file undo_redo_cells.h
  * Arquivo que trata de uma fila de desfazer/refazer dados de uma célula
  */

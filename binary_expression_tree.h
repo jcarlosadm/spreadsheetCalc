@@ -1,4 +1,4 @@
-/*
+/**
  * \file binary_expression_tree.h
  * Arquivo que descreve as funcionalidades de uma árvore de expressão binária
  */
