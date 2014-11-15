@@ -191,7 +191,8 @@ void MATRIX_modDependencies(Matrix** matrix, int cellIndex, const char* expressi
 
         // faz comparações com base na table ascii
         // um parênteses e o próximo caractere não número?
-        if(expression[count]=='(' && !(MIN_ASCII_NUMBER<= expression[count+1] &&
+        if(expression[count]=='(' && expression[count+1]!='('
+                && !(MIN_ASCII_NUMBER<= expression[count+1] &&
                 expression[count+1]<=MAX_ASCII_NUMBER)){
             // move para o próximo caractere
             count++;
@@ -206,14 +207,7 @@ void MATRIX_modDependencies(Matrix** matrix, int cellIndex, const char* expressi
 
             count++;
         }
-        else if(expression[count]=='+' || expression[count]=='-'
-                || expression[count]=='*' || expression[count]=='/'){
-            count++;
-        }
-        else{
-            while(expression[count]!=0 && expression[count]!=')')
-                count++;
-        }
+
         count++;
     }
 }
