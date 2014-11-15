@@ -5,8 +5,10 @@
 
 #include "matrix.h"
 
+// a quantidade máxima de células
 #define MAX_CELLS 100
 
+// valores da tabela ascii para referência
 #define MIN_ASCII_NUMBER 48
 #define MAX_ASCII_NUMBER 57
 #define MIN_ASCII_CAP_LETTER 65
@@ -59,7 +61,10 @@ struct matrix{
  ****************************************************************************/
 
 /**
- * Desaloca células do graph
+ * Desaloca células do grafo recursivamente
+ * \param cells Array de ponteiros para Cell
+ * \param index Valor que será incrementado a cada chamada da função
+ * (começa em zero)
  */
 void MATRIX_freeGraphCells(Cell** cells, int index){
     if(index >= MAX_CELLS) return;
@@ -83,17 +88,47 @@ void MATRIX_freeGraphCells(Cell** cells, int index){
 }
 
 /**
- * Calcula índice da célula
+ * Calcula índice da célula no grafo com base na linha e coluna
+ * \return Valor do índice da célula no grafo
+ * \param row Linha da célula
+ * \param column Coluna da célula
+ * \param max_columns Total de colunas da matriz
  */
 int MATRIX_evalCellIndex(int row, int column, int max_columns){
     return ((column-1)+(row-1)*(max_columns));
 }
 
 /**
- * Obtém o índice de uma célula com base em sua string ('A2' por exemplo)
+ * Calcula a linha da célula com base em seu índice no grafo
+ * \return Linha da célula
+ * \param cellIndex Índice da célula no grafo
+ * \param max_columns Total de colunas da matriz
+ */
+int MATRIX_getRow(int cellIndex, int max_columns){
+    return ((cellIndex/max_columns)+1);
+}
+
+/**
+ * Calcula a coluna da célula com base em seu índice no grafo
+ * \return Coluna da célula
+ * \param cellIndex Índice da célula no grafo
+ * \param max_columns Total de colunas da matriz
+ */
+int MATRIX_getColumn(int cellIndex, int max_column){
+    int row = MATRIX_getRow(cellIndex, max_column);
+    return ((cellIndex - max_column*(row-1))+1);
+}
+
+/**
+ * Obtém o índice no grafo de uma célula com base na string de referência ('A2' por exemplo)
+ * \return Índice da célula no grafo
+ * \param expression Expressão que contém a referência
+ * \param count Ponteiro para inteiro que indica o índice da referência na expressão
+ * \param columns Quantidade de colunas da matriz
  */
 int MATRIX_getCellIndex_fromReference(const char *expression, int *count, int columns){
 
+    // variáveis para guardar o valor de uma letra, linha e coluna
     int letter, coords[2];
 
     // pega valor ascii do caractere e converte para um valor de coluna
@@ -106,31 +141,37 @@ int MATRIX_getCellIndex_fromReference(const char *expression, int *count, int co
     (*count)++;
     coords[0] = expression[(*count)] - MIN_ASCII_NUMBER;
 
+    // retorna o índice da célula no grafo
     return MATRIX_evalCellIndex(coords[0],coords[1], columns);
 }
 
 /**
  * Remove uma dependência da célula
+ * \param cell Ponteiro duplo para uma célula da matriz
+ * \param value Índice da célula no grafo que irá ser removido
  */
 void MATRIX_removeDependency(Cell** cell, int value){
     if(!cell || !(*cell) || !(*cell)->first) return;
 
     Dependency* current = (*cell)->first;
+    // se encontrou de primeira, remove a dependência
     if(current->value == value){
         (*cell)->first = current->next;
         free(current);
 
+        // se a célula não contém dependências e nenhuma expressão, libera memória
         if((*cell)->first == NULL && strcmp((*cell)->expression, "")==0){
             free(*cell);
             (*cell) = NULL;
         }
-
         return;
     }
 
+    // se não encontrou de primeira, procura
     while(current->next && current->next->value != value)
         current = current->next;
 
+    // se encontrou, remove e libera a memória
     if(current->next){
         Dependency* remove = current->next;
         current->next = current->next->next;
@@ -140,10 +181,13 @@ void MATRIX_removeDependency(Cell** cell, int value){
 }
 
 /**
- * adiciona uma dependência da célula
+ * Adiciona uma dependência da célula
+ * \param cell Ponteiro duplo para uma célula da matriz
+ * \param value Índice da célula no grafo que irá ser adicionado
  */
 void MATRIX_addDependency(Cell** cell, int value){
 
+    // se a célula não estiver alocada, aloca memória
     if(!(*cell)){
         (*cell) = malloc(sizeof(Cell));
         if(!(*cell)) return;
@@ -152,6 +196,7 @@ void MATRIX_addDependency(Cell** cell, int value){
         strcpy((*cell)->expression, "");
     }
 
+    // se a célula não tiver dependências, adiciona
     if(!(*cell)->first){
         (*cell)->first = malloc(sizeof(Dependency));
         if(!(*cell)->first) return;
@@ -163,13 +208,16 @@ void MATRIX_addDependency(Cell** cell, int value){
 
     Dependency* current = (*cell)->first;
 
+    // se encontrou a dependência, simplesmente sai
     if(current->value == value) return;
 
     while(current->next && current->next->value != value)
         current = current->next;
 
+    // se encontrou a dependência, simplesmente sai
     if(current->next) return;
 
+    // não encontrou a dependência. adiciona
     current->next = malloc(sizeof(Dependency));
     if(!current->next) return;
 
@@ -181,39 +229,52 @@ void MATRIX_addDependency(Cell** cell, int value){
 /**
  * Remove ou adiciona todas as dependências em relação a uma célula específica,
  * com base na expressão
+ * \param matrix Ponteiro duplo para a matriz de células
+ * \param cellIndex Índice da célula que será removida da lista de dependência
+ * de outras células com base na expressão
+ * \param expression Expressão que contém informações de dependências
  * \param isRemove Se true, deverá remover a dependência. Caso contrário, adiciona
  */
 void MATRIX_modDependencies(Matrix** matrix, int cellIndex, const char* expression,
         int isRemove){
-    // retira dependências em relação à célula atual, com base na antiga expressão
+
     int count=0, cellDestiny;
+    // percorre a expressão
     while(expression[count]!=0){
 
-        // faz comparações com base na table ascii
-        // um parênteses e o próximo caractere não número?
-        if(expression[count]=='(' && expression[count+1]!='('
-                && !(MIN_ASCII_NUMBER<= expression[count+1] &&
-                expression[count+1]<=MAX_ASCII_NUMBER)){
-            // move para o próximo caractere
+        // pula caracteres conhecidos não válidos
+        if(expression[count]=='(' || expression[count]==')' || expression[count]==' '
+                || expression[count]=='+' || expression[count]=='-'
+                || expression[count]=='*' || expression[count]=='/'
+                || expression[count]==',' || expression[count]=='.'){
             count++;
+            continue;
+        }
 
+        // faz comparações com base na table ascii
+        // um caractere não-número seguido de um número?
+        if(!(MIN_ASCII_NUMBER<= expression[count] && expression[count]<=MAX_ASCII_NUMBER)
+                && expression[count+1]!=0 && (MIN_ASCII_NUMBER<= expression[count+1]
+                && expression[count+1]<=MAX_ASCII_NUMBER)){
+
+            // pega índice da célula no grafo
             cellDestiny = MATRIX_getCellIndex_fromReference(expression, &count,
                     (*matrix)->columns);
 
+            // remove ou adiciona
             if(isRemove)
                 MATRIX_removeDependency(&((*matrix)->graph.cells[cellDestiny]), cellIndex);
             else
                 MATRIX_addDependency(&((*matrix)->graph.cells[cellDestiny]), cellIndex);
-
-            count++;
         }
-
         count++;
     }
 }
 
 /**
  * Computa o valor da célula
+ * \param matrix Ponteiro duplo para matriz de células
+ * \param cellIndex Índice da célula no grafo que terá o valor atualizado
  */
 void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex){
     if(!matrix || !(*matrix)) return;
@@ -225,21 +286,22 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex){
     // guarda nome de função que possa existir na expressão
     char function[10];
     // guarda valor numérico que possa existir na expressão
-    char number_char[50];
+    char number_char[60];
 
-    // guarda índice temporário
+    // guarda índice temporário de célula
     int cellTempIndex;
 
-    // Para o módulo de funções
+    // Lista de valores para computar em uma função
     ListDouble* list;
 
-    // para o módulo stack_binExpTree
+    // Pilha de árvore de expressão binária
     StackBinExpTree* stackBin = STACKBINEXPTREE_create();
 
     // percorre expressão
     int count=0, check;
     while(expression[count] != 0){
 
+        // pula espaços em branco
         if(expression[count]==' '){
             count++;
             continue;
@@ -251,110 +313,157 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex){
                 (expression[count+1]!=0 && (MIN_ASCII_NUMBER<= expression[count+1] &&
                 expression[count+1]<=MAX_ASCII_NUMBER))){
 
+            // referência para uma célula
             if(!(MIN_ASCII_NUMBER<= expression[count] &&
                     expression[count]<=MAX_ASCII_NUMBER)){
 
+                // pega índice da célula com base na referência
                 cellTempIndex = MATRIX_getCellIndex_fromReference(expression, &count,
                         (*matrix)->columns);
 
+                // coloca valor na pilha de expressão binária
                 if(!(*matrix)->graph.cells[cellTempIndex])
                     STACKBINEXPTREE_pushValue(&stackBin, 0);
                 else
                     STACKBINEXPTREE_pushValue(&stackBin,
                             (*matrix)->graph.cells[cellTempIndex]->value);
+                // vai para o próximo caractere
+                count++;
             }
+
+            // número
             else{
+                // usa check para percorrer a expressão mantendo count no lugar
                 check = count;
+                // enquanto for caractere pertencente ao número...
                 while(expression[check]!=' ' && ((MIN_ASCII_NUMBER<= expression[check] &&
                         expression[check]<=MAX_ASCII_NUMBER)||expression[check]=='.')
                         && expression[check]!=0){
+                    // vai preenchendo number_char
                     number_char[check-count]=expression[check];
                     check++;
                 }
+                // final de linha
                 number_char[check-count]=0;
 
+                // adiciona valor na pilha de expressão binária
                 STACKBINEXPTREE_pushValue(&stackBin, atof(number_char));
 
+                // atualiza count
                 count = check;
-
             }
         }
+
         // operador
         else if(expression[count]=='+' || expression[count]=='-'
                 || expression[count]=='*' || expression[count]=='/'){
+            // adiciona operador na pilha de expressão binária
             STACKBINEXPTREE_pushSymbol(&stackBin, expression[count]);
+            // vai para o próximo caractere
             count++;
         }
+
         // função
         else{
 
+            // usa check para percorrer a expressão mantendo count no lugar
             check=count;
+            // enquanto não encontrar um abre parênteses...
             while(expression[check]!='('){
+                // preenche function
                 function[check-count] = expression[check];
                 check++;
             }
 
+            // final de linha
             function[check-count]=0;
 
+            // atualiza count para um caractere a mais que check
             count=check+1;
+            // cria lista de valores a ser usada com a função
             list = FUNCTIONS_createList();
 
-            while(1){
+            // enquanto o caractere não for fechar parênteses...
+            while(expression[count]!=')'){
 
-                if(expression[count]==')'){
-                    count++;
-                    break;
-                }
-
+                // pula vírgulas
                 if(expression[count]==','){
                     count++;
                     continue;
                 }
 
+                // uma referência de célula
                 if(!(MIN_ASCII_NUMBER<= expression[count] &&
                         expression[count]<=MAX_ASCII_NUMBER)){
 
+                    // pega índice da célula no grafo
                     cellTempIndex = MATRIX_getCellIndex_fromReference(expression, &count,
                             (*matrix)->columns);
+                    // adiciona valor na lista
                     if(!(*matrix)->graph.cells[cellTempIndex])
                         list = FUNCTIONS_addValue(list, 0);
                     else
                         list = FUNCTIONS_addValue(list,
                                 (*matrix)->graph.cells[cellTempIndex]->value);
+                    // pula para o próximo caractere
                     count++;
                 }
+                // um número
                 else{
+                    // usa variável check para percorrer expressão mantendo count no lugar
                     check = count;
 
+                    // enquanto não encontrar vírgula ou parênteses...
                     while(expression[check]!=',' && expression[check]!=')'){
+                        // preenche number_char
                         number_char[check-count]=expression[check];
                         check++;
                     }
+                    // final de linha
                     number_char[check-count]=0;
+                    // adiciona valor na lista (converte number_char para double)
                     list = FUNCTIONS_addValue(list, atof(number_char));
 
+                    // atualiza count
                     count = check;
 
                 }
             }
+            // pula para o próximo caractere (que está em um fecha parênteses)
+            count++;
 
+            // adiciona resultado da função na pilha de árvore de expressão binária
             STACKBINEXPTREE_pushValue(&stackBin, FUNCTIONS_evalFunction(function, &list));
+            // libera fila de valores doubles
             list = FUNCTIONS_free(list);
         }
     }
 
+    // O valor da célula será o resultado da árvore de expressão binária
     (*matrix)->graph.cells[cellIndex]->value = STACKBINEXPTREE_pop(&stackBin);
 
+    // libera pilha de árvore de expressão binária
     stackBin = STACKBINEXPTREE_free(stackBin);
 }
 
+/**
+ * Calcula valor de todas as células da lista de dependência
+ * \param matrix Ponteiro duplo para matriz de células
+ * \param cellIndex Índice da célula que terá células dependentes atualizadas
+ * \param originalCell Índice da célula original que começou a recursão (no
+ * início, cellIndex e originalCell possuem o mesmo valor)
+ */
 void MATRIX_evalCellDepsValue(Matrix** matrix, int cellIndex, int originalCell){
 
     Dependency* dep = (*matrix)->graph.cells[cellIndex]->first;
-
+    // enquanto o nó de dependência for diferente de nulo...
     while(dep){
-        if(dep->value != originalCell){
+        // se o índice da célula dependente for diferente da célula original
+        // (isso evita o problema de loop infinito em referências cíclicas)
+        if(dep->value != originalCell && dep->value != cellIndex){
+            // atualiza valor da célula
             MATRIX_evalCellValue(&(*matrix), dep->value);
+            // atualiza valor das células dependentes desta
             MATRIX_evalCellDepsValue(&(*matrix), dep->value, originalCell);
         }
         dep = dep->next;
