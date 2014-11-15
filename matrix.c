@@ -616,8 +616,56 @@ int MATRIX_setExpression(Matrix** matrix, int row, int column, const char* expre
 
 }
 
+/**
+ * Tenta realizar operação de desfazer na matriz de células
+ * \return 1 se obtiver sucesso e 0 em caso contrário
+ * \param matrix Ponteiro duplo para matriz Matrix
+ * \param undoRedo Ponteiro duplo para fila de desfazer/refazer
+ */
+int MATRIX_undo(Matrix** matrix, UndoRedoCells** undoRedo){
+    if(!matrix || !(*matrix) || !undoRedo || !(*undoRedo)) return 0;
 
+    if(!UNDOREDOCELLS_canUndo(&(*undoRedo))) return 0;
 
+    // variáveis a serem obtidas da fila undoRedo
+    char expression[60];
+    int cellIndex;
 
+    if(!UNDOREDOCELLS_undo(&(*undoRedo), expression, &cellIndex)) return 0;
 
+    // obtém linha e coluna correspondentes
+    int row = MATRIX_getRow(cellIndex, (*matrix)->columns);
+    int column = MATRIX_getColumn(cellIndex, (*matrix)->columns);
 
+    // preenche expressão da célula correta, sem colocar na pilha novamente
+    if(!MATRIX_setExpression(&(*matrix), row, column, expression, NULL)) return 0;
+
+    return 1;
+}
+
+/**
+ * Tenta realizar operação de refazer na matriz de células
+ * \return 1 se obtiver sucesso e 0 em caso contrário
+ * \param matrix Ponteiro duplo para matriz Matrix
+ * \param undoRedo Ponteiro duplo para fila de desfazer/refazer
+ */
+int MATRIX_redo(Matrix** matrix, UndoRedoCells** undoRedo){
+    if(!matrix || !(*matrix) || !undoRedo || !(*undoRedo)) return 0;
+
+    if(!UNDOREDOCELLS_canRedo(&(*undoRedo))) return 0;
+
+    // variáveis a serem obtidas da fila undoRedo
+    char expression[60];
+    int cellIndex;
+
+    if(!UNDOREDOCELLS_redo(&(*undoRedo), expression, &cellIndex)) return 0;
+
+    // obtém linha e coluna correspondentes
+    int row = MATRIX_getRow(cellIndex, (*matrix)->columns);
+    int column = MATRIX_getColumn(cellIndex, (*matrix)->columns);
+
+    // preenche expressão da célula correta, sem colocar na pilha novamente
+    if(!MATRIX_setExpression(&(*matrix), row, column, expression, NULL)) return 0;
+
+    return 1;
+}
