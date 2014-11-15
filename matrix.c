@@ -239,11 +239,21 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex){
     // percorre expressão
     int count=0, check;
     while(expression[count] != 0){
-        // número ou referência para uma célula
-        if(expression[count]=='('){
+
+        if(expression[count]==' '){
             count++;
+            continue;
+        }
+
+        // número ou referência para uma célula
+        if((MIN_ASCII_NUMBER<= expression[count] &&
+                expression[count]<=MAX_ASCII_NUMBER) ||
+                (expression[count+1]!=0 && (MIN_ASCII_NUMBER<= expression[count+1] &&
+                expression[count+1]<=MAX_ASCII_NUMBER))){
+
             if(!(MIN_ASCII_NUMBER<= expression[count] &&
                     expression[count]<=MAX_ASCII_NUMBER)){
+
                 cellTempIndex = MATRIX_getCellIndex_fromReference(expression, &count,
                         (*matrix)->columns);
 
@@ -252,11 +262,12 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex){
                 else
                     STACKBINEXPTREE_pushValue(&stackBin,
                             (*matrix)->graph.cells[cellTempIndex]->value);
-                count++;
             }
             else{
                 check = count;
-                while(expression[check]!=')'){
+                while(expression[check]!=' ' && ((MIN_ASCII_NUMBER<= expression[check] &&
+                        expression[check]<=MAX_ASCII_NUMBER)||expression[check]=='.')
+                        && expression[check]!=0){
                     number_char[check-count]=expression[check];
                     check++;
                 }
@@ -265,15 +276,18 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex){
                 STACKBINEXPTREE_pushValue(&stackBin, atof(number_char));
 
                 count = check;
+
             }
         }
         // operador
         else if(expression[count]=='+' || expression[count]=='-'
                 || expression[count]=='*' || expression[count]=='/'){
             STACKBINEXPTREE_pushSymbol(&stackBin, expression[count]);
+            count++;
         }
         // função
         else{
+
             check=count;
             while(expression[check]!='('){
                 function[check-count] = expression[check];
@@ -287,17 +301,19 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex){
 
             while(1){
 
-                if(expression[count]==')' && expression[count-1]==')')
-                    break;
-
-                if(expression[count]==')' || expression[count]=='('
-                        || expression[count]==','){
+                if(expression[count]==')'){
                     count++;
+                    break;
+                }
 
+                if(expression[count]==','){
+                    count++;
                     continue;
                 }
+
                 if(!(MIN_ASCII_NUMBER<= expression[count] &&
                         expression[count]<=MAX_ASCII_NUMBER)){
+
                     cellTempIndex = MATRIX_getCellIndex_fromReference(expression, &count,
                             (*matrix)->columns);
                     if(!(*matrix)->graph.cells[cellTempIndex])
@@ -306,28 +322,25 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex){
                         list = FUNCTIONS_addValue(list,
                                 (*matrix)->graph.cells[cellTempIndex]->value);
                     count++;
-
                 }
                 else{
                     check = count;
+
                     while(expression[check]!=',' && expression[check]!=')'){
                         number_char[check-count]=expression[check];
                         check++;
                     }
                     number_char[check-count]=0;
                     list = FUNCTIONS_addValue(list, atof(number_char));
-                    if(expression[check]!=')')
-                        count = check;
-                    else
-                        count = check-1;
+
+                    count = check;
+
                 }
-                count++;
             }
+
             STACKBINEXPTREE_pushValue(&stackBin, FUNCTIONS_evalFunction(function, &list));
             list = FUNCTIONS_free(list);
         }
-
-        count++;
     }
 
     (*matrix)->graph.cells[cellIndex]->value = STACKBINEXPTREE_pop(&stackBin);
