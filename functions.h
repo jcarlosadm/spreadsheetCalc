@@ -7,6 +7,13 @@
 #define FUNCTIONS_H_
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/**
+ * Estrutura de uma lista de valores
+ */
+typedef struct listDouble ListDouble;
 
 /**
  * Lista funções disponíveis para o usuário
@@ -14,35 +21,32 @@
 void FUNCTIONS_listFunctions();
 
 /**
- * Calcula a soma de uma lista de valores
- * \return Retorna a soma
- * \param values Ponteiro para o começo de um array de doubles
- * \param size Tamanho do array de doubles
+ * Cria a lista de doubles
+ * \return NULL
  */
-double FUNCTIONS_sum(double *values, int size);
+ListDouble* FUNCTIONS_createList();
 
 /**
- * Calcula a média de uma lista de valores
- * \return Retorna a média
- * \param values Ponteiro para o começo de um array de doubles
- * \param size Tamanho do array de doubles
+ * Desaloca memória da lista de doubles
+ * \return NULL
+ * \param list Ponteiro para a lista de doubles
  */
-double FUNCTIONS_mean(double *values, int size);
+ListDouble* FUNCTIONS_free(ListDouble* list);
 
 /**
- * Procura pelo maior valor de uma lista de valores
- * \return Retorna o maior valor
- * \param values Ponteiro para o começo de um array de doubles
- * \param size Tamanho do array de doubles
+ * Adiciona valor na lista de doubles
+ * \return Ponteiro para a lista de double
+ * \param list Ponteiro para a lista de doubles
+ * \param value Valor a ser adicionado na lista
  */
-double FUNCTIONS_max(double *values, int size);
+ListDouble* FUNCTIONS_addValue(ListDouble* list, double value);
 
 /**
- * Procura pelo menor valor de uma lista de valores
- * \return Retorna o menor valor
- * \param values Ponteiro para o começo de um array de doubles
- * \param size Tamanho do array de doubles
+ * Executa uma função do módulo
+ * \return O resultado da execução da função na lista fornecida
+ * \param function string literal do nome da função
+ * \param list Ponteiro duplo para lista de doubles
  */
-double FUNCTIONS_min(double *values, int size);
+double FUNCTIONS_evalFunction(const char* function, ListDouble** list);
 
 #endif /* FUNCTIONS_H_ */

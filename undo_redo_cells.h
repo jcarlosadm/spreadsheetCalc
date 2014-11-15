@@ -36,8 +36,8 @@ UndoRedoCells* UNDOREDOCELLS_free(UndoRedoCells* undoRedoCells);
  * \param newExpression Nova expressão da célula
  * \param cellValue Valor (posição) da célula
  */
-int UNDOREDOCELLS_newItem(UndoRedoCells** undoRedoCells, char* oldExpression,
-        char* newExpression, int cellValue);
+int UNDOREDOCELLS_newItem(UndoRedoCells** undoRedoCells, const char* oldExpression,
+        const char* newExpression, int cellValue);
 
 /**
  * Verifica se é possível executar operação undo
