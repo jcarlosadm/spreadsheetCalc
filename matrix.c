@@ -308,13 +308,19 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphi
             continue;
         }
 
+        // operador
+        if(expression[count]=='+' || expression[count]=='-'
+                || expression[count]=='*' || expression[count]=='/'){
+            // adiciona operador na pilha de expressão binária
+            STACKBINEXPTREE_pushSymbol(&stackBin, expression[count]);
+            // vai para o próximo caractere
+            count++;
+        }
+
         // número ou referência para uma célula
-        if((expression[count]!='+' && expression[count]!='-'
-                && expression[count]!='*' && expression[count]!='/') &&
-                ((MIN_ASCII_NUMBER<= expression[count] &&
-                expression[count]<=MAX_ASCII_NUMBER) ||
-                (expression[count+1]!=0 && (MIN_ASCII_NUMBER<= expression[count+1] &&
-                expression[count+1]<=MAX_ASCII_NUMBER)))){
+        else if((MIN_ASCII_NUMBER<= expression[count] && expression[count]<=MAX_ASCII_NUMBER)
+                || (expression[count+1]!=0 && (MIN_ASCII_NUMBER<= expression[count+1] &&
+                expression[count+1]<=MAX_ASCII_NUMBER))){
 
             // referência para uma célula
             if(!(MIN_ASCII_NUMBER<= expression[count] &&
@@ -356,16 +362,6 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphi
                 count = check;
 
             }
-        }
-
-        // operador
-        else if(expression[count]=='+' || expression[count]=='-'
-                || expression[count]=='*' || expression[count]=='/'){
-            // adiciona operador na pilha de expressão binária
-            STACKBINEXPTREE_pushSymbol(&stackBin, expression[count]);
-            // vai para o próximo caractere
-            count++;
-            printf("%s - %c\n",expression, expression[count]);
         }
 
         // função
