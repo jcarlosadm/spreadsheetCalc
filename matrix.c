@@ -861,6 +861,14 @@ int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int colum
 
                     if(expression[count]!=')' && expression[count]!=' '
                             && expression[count]!=','){
+
+                        if(expression[count]==0){
+                            sprintf(message,
+                                    "parenteses nao fechou antes do final da expressao");
+                            MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                            return 0;
+                        }
+
                         sprintf(message, "caractere nao valido %c na posicao %d",
                                 expression[count],count);
                         MATRIX_showError(&(*graphic), message, 0, __FILE__);
@@ -902,6 +910,13 @@ int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int colum
                 }
                 // caractere inválido
                 else{
+
+                    if(expression[count]==0){
+                        sprintf(message, "parenteses nao fechou antes do final da expressao");
+                        MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                        return 0;
+                    }
+
                     sprintf(message, "caractere nao valido %c na posicao %d",
                             expression[count],count);
                     MATRIX_showError(&(*graphic), message, 0, __FILE__);
