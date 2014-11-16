@@ -49,4 +49,11 @@ ListDouble* FUNCTIONS_addValue(ListDouble* list, double value);
  */
 double FUNCTIONS_evalFunction(const char* function, ListDouble** list);
 
+/**
+ * Verifica se a string fornecida é o nome de uma função válida
+ * \return 1 em caso positivo, ou 0 em caso negativo
+ * \param function Nome da função
+ */
+int FUNCTIONS_isFunction(const char* function);
+
 #endif /* FUNCTIONS_H_ */

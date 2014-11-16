@@ -175,7 +175,7 @@ ListDouble* FUNCTIONS_addValue(ListDouble* list, double value){
 /**
  * Executa uma função do módulo
  * \return O resultado da execução da função na lista fornecida
- * \param function string literal do nome da função
+ * \param function String literal do nome da função
  * \param list Ponteiro duplo para lista de doubles
  */
 double FUNCTIONS_evalFunction(const char* function, ListDouble** list){
@@ -189,4 +189,17 @@ double FUNCTIONS_evalFunction(const char* function, ListDouble** list){
         return FUNCTIONS_min(&(*list));
 
     return 0;
+}
+
+/**
+ * Verifica se a string fornecida é o nome de uma função válida
+ * \return 1 em caso positivo, ou 0 em caso negativo
+ * \param function Nome da função
+ */
+int FUNCTIONS_isFunction(const char* function){
+    if(strcmp(function, "sum")==0 || strcmp(function, "mean")==0
+            || strcmp(function, "max")==0 || strcmp(function, "min")==0)
+        return 1;
+    else
+        return 0;
 }
