@@ -47,11 +47,8 @@ void GRAPHICSCELLS_freeCells(WindowCell** cells, int maxCells, int count){
     if(count >= maxCells) return;
 
     if(cells[count]){
-        if(cells[count]->cell){
-            wclear(cells[count]->cell);
-            wrefresh(cells[count]->cell);
+        if(cells[count]->cell)
             delwin(cells[count]->cell);
-        }
         free(cells[count]);
         cells[count] = NULL;
     }
@@ -169,4 +166,15 @@ int GRAPHICSCELLS_updateCell(GraphicCells** graphicCells, int row, int column, d
     wrefresh((*graphicCells)->windowCell[index]->cell);
 
     return 1;
+}
+
+/**
+ * Pega posição da borda inferior do conjunto inteiro de células
+ * \return Posição da borda inferior do conjunto de células
+ * \param graphicCells Ponteiro para objeto GraphicCells
+ */
+int GRAPHICSCELLS_getBottomPosition(GraphicCells** graphicCells){
+    if(!graphicCells || !(*graphicCells)) return 0;
+
+    return (((*graphicCells)->rows+1)*CELLHEIGHT);
 }

@@ -88,4 +88,16 @@ int MATRIX_undo(Matrix** matrix, UndoRedoCells** undoRedo, GraphicCells** graphi
  */
 int MATRIX_redo(Matrix** matrix, UndoRedoCells** undoRedo, GraphicCells** graphic);
 
+/**
+ * Valida expressão
+ * \return 1 se a expressão for válida, 0 em caso contrário
+ * \param graphic Ponteiro duplo para GraphicInstructions (para informar o usuário
+ * de possíveis erros). Informe NULL se não desejar imprimir essas informações
+ * \param rows Quantidade de linhas da matriz de células
+ * \param columns Quantidade de colunas da matriz de células
+ * \param expression Expressão a ser validada
+ */
+int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int columns,
+        const char *expression);
+
 #endif /* MATRIX_H_ */

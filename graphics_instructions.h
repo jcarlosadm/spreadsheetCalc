@@ -18,7 +18,7 @@ typedef struct graphicInstructions GraphicInstructions;
 
 /**
  * Cria a janela de instruções e desenha na tela
- * \return Ponteiro para GraphicInstructions
+ * \return Ponteiro para GraphicInstructions ou NULL
  * \param positionX Posição x da janela
  * \param positionY Posição y da janela
  * \param width Largura da janela
@@ -54,7 +54,7 @@ void GRAPHICINST_write(GraphicInstructions** graphic, const char *instruction,
  * Escreve instruções do teclado (up, down, left, right) na posição informada
  * \param graphic Ponteiro duplo para GraphicInstructions
  * \param positionX Coordenada x em que aparecerá a instrução
- * \param positionY Coordenada y em que aparecerá a isntrução
+ * \param positionY Coordenada y em que aparecerá a instrução
  */
 void GRAPHICINST_writeKeyboard(GraphicInstructions** graphic, int positionX,
         int positionY);

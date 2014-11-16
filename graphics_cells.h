@@ -35,6 +35,7 @@ GraphicCells* GRAPHICSCELLS_free(GraphicCells* graphicCells);
 /**
  * Atualiza o gráfico de uma célula
  * \return 1 em caso de sucesso, ou 0 em caso de falha
+ * \param graphicCells Ponteiro para objeto GraphicCells
  * \param row Linha da célula
  * \param column Coluna da célula
  * \param value Valor a ser colocado na célula
@@ -45,5 +46,12 @@ GraphicCells* GRAPHICSCELLS_free(GraphicCells* graphicCells);
  */
 int GRAPHICSCELLS_updateCell(GraphicCells** graphicCells, int row, int column, double value,
         int mark, int disable);
+
+/**
+ * Pega posição da borda inferior do conjunto inteiro de células
+ * \return Posição da borda inferior do conjunto de células
+ * \param graphicCells Ponteiro para objeto GraphicCells
+ */
+int GRAPHICSCELLS_getBottomPosition(GraphicCells** graphicCells);
 
 #endif /* GRAPHICS_H_ */

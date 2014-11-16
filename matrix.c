@@ -88,6 +88,33 @@ void MATRIX_freeGraphCells(Cell** cells, int index){
 }
 
 /**
+ * Mostra mensagem de erro
+ * \param graphic Ponteiro duplo para objeto GraphicInstructions
+ * \param errorMessage Mensagem de erro a ser mostrada
+ * \param line Linha em que ocorre o erro (informe 0 para que não apareça a linha
+ * e nome do arquivo)
+ * \param filename Nome do arquivo em que ocorre o erro
+ */
+void MATRIX_showError(GraphicInstructions** graphic, const char *errorMessage,
+        int line, const char *filename){
+
+    char message[60];
+    if(graphic && (*graphic)){
+        GRAPHICINST_write(&(*graphic), errorMessage, 1,1);
+        if(line){
+            sprintf(message,"In line %d and file %s",line, filename);
+            GRAPHICINST_write(&(*graphic), message, 1,2);
+        }
+        return;
+    }
+
+    if(line)
+        printf("%s\nIn line %d and file %s",errorMessage, line, filename);
+    else
+        printf("%s\n",errorMessage);
+}
+
+/**
  * Verifica se um caractere é número
  * \return 1 se for número, 0 em caso contrário
  * \param value Caractere a ser testado
@@ -699,6 +726,200 @@ int MATRIX_redo(Matrix** matrix, UndoRedoCells** undoRedo, GraphicCells** graphi
 
     // preenche expressão da célula correta, sem colocar na pilha novamente
     if(!MATRIX_setExpression(&(*matrix), row, column, expression, NULL, &(*graphic))) return 0;
+
+    return 1;
+}
+
+/**
+ * Valida expressão
+ * \return 1 se a expressão for válida, 0 em caso contrário
+ * \param graphic Ponteiro duplo para GraphicInstructions (para informar o usuário
+ * de possíveis erros). Informe NULL se não desejar imprimir essas informações
+ * \param rows Quantidade de linhas da matriz de células
+ * \param columns Quantidade de colunas da matriz de células
+ * \param expression Expressão a ser validada
+ */
+int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int columns,
+        const char *expression){
+
+    if(graphic && (*graphic))
+        GRAPHICINST_clear(&(*graphic));
+
+    // guarda nome de função que possa existir na expressão
+    char function[10];
+
+    // guarda mensagem de erro a ser informada para o usuário
+    char message[100];
+
+    // maior caractere maiúsculo e minúsculo possível para a coluna
+    int charLimitCap, charLimit;
+    charLimitCap = columns + MIN_ASCII_CAP_LETTER - 1;
+    charLimit = columns + MIN_ASCII_LETTER - 1;
+
+    // maior número para a linha
+    int intLimit = rows + MIN_ASCII_NUMBER;
+
+    int count=0, check;
+    while(expression[count] != 0){
+
+        // pula espaços em branco
+        if(expression[count]==' '){
+            count++;
+            continue;
+        }
+
+        // operador
+        if(MATRIX_charIsOperator(expression[count]))
+            count++;
+
+        // número
+        else if(MATRIX_charIsNumber(expression[count])){
+            while(MATRIX_charIsNumber(expression[count]) || expression[count]=='.')
+                count++;
+            if(expression[count]!=0 && expression[count]!=' '
+                    && !MATRIX_charIsAlpha(expression[count])
+                    && !MATRIX_charIsOperator(expression[count])){
+                sprintf(message, "caractere nao valido %c na posicao %d",
+                        expression[count],count);
+                MATRIX_showError(&(*graphic), message, 0, __FILE__);
+
+                return 0;
+            }
+        }
+
+        // referência de célula
+        else if(MATRIX_charIsAlpha(expression[count]) && expression[count+1]!=0
+                && MATRIX_charIsNumber(expression[count+1])){
+
+            if(MATRIX_charIsAlpha(expression[count])==1 && expression[count] > charLimitCap){
+                sprintf(message,
+                   "a referencia %c, na posicao %d, vai alem da quantidade de colunas",
+                   expression[count],count);
+                MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                return 0;
+            }
+            else if(MATRIX_charIsAlpha(expression[count])==2
+                    && expression[count] > charLimit){
+                sprintf(message,
+                   "a referencia %c, na posicao %d, vai alem da quantidade de colunas",
+                   expression[count],count);
+                MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                return 0;
+            }
+
+            // vai para a parte numérica da referência
+            count++;
+            if(expression[count] > intLimit){
+                sprintf(message,
+                   "a referencia %c, na posicao %d, vai alem da quantidade de linhas",
+                   expression[count],count);
+                MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                return 0;
+            }
+            // vai para o próximo caractere
+            count++;
+        }
+
+        // função
+        else if(MATRIX_charIsAlpha(expression[count]) && expression[count+1]!=0
+                && MATRIX_charIsAlpha(expression[count+1])){
+
+            // usa check para percorrer a expressão mantendo count no lugar
+            check=count;
+            // enquanto não encontrar um abre parênteses...
+            while(expression[check]!='('){
+                // preenche function
+                function[check-count] = expression[check];
+                check++;
+            }
+            // final de linha
+            function[check-count] = 0;
+
+            // se a função não existir, sai com erro
+            if(!FUNCTIONS_isFunction(function)){
+                sprintf(message, "funcao %s nao existente na posicao %d", function,count);
+                MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                return 0;
+            }
+            // count é um caractere a mais que check
+            count= check+1;
+
+            // enquanto não encontrar um fecha parênteses...
+            while(expression[count]!=')'){
+
+                //pula vírgulas e espaços
+                if(expression[count]==' ' || expression[count]==','){
+                    count++;
+                    continue;
+                }
+
+                // número
+                if(MATRIX_charIsNumber(expression[count])){
+
+                    while(MATRIX_charIsNumber(expression[count]) || expression[count]=='.')
+                        count++;
+
+                    if(expression[count]!=')' && expression[count]!=' '
+                            && expression[count]!=','){
+                        sprintf(message, "caractere nao valido %c na posicao %d",
+                                expression[count],count);
+                        MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                        return 0;
+                    }
+                }
+                // referência de célula
+                else if(MATRIX_charIsAlpha(expression[count]) && expression[count+1]!=0
+                        && MATRIX_charIsNumber(expression[count+1])){
+
+                    if(MATRIX_charIsAlpha(expression[count])==1
+                            && expression[count] > charLimitCap){
+                        sprintf(message,
+                           "a referencia %c, na posicao %d, vai alem da quantidade de colunas",
+                           expression[count],count);
+                        MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                        return 0;
+                    }
+                    else if(MATRIX_charIsAlpha(expression[count])==2
+                            && expression[count] > charLimit){
+                        sprintf(message,
+                           "a referencia %c, na posicao %d, vai alem da quantidade de colunas",
+                           expression[count],count);
+                        MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                        return 0;
+                    }
+
+                    // vai para a parte numérica da referência
+                    count++;
+                    if(expression[count] > intLimit){
+                        sprintf(message,
+                           "a referencia %c, na posicao %d, vai alem da quantidade de linhas",
+                           expression[count],count);
+                        MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                        return 0;
+                    }
+                    // vai para o próximo caractere
+                    count++;
+                }
+                // caractere inválido
+                else{
+                    sprintf(message, "caractere nao valido %c na posicao %d",
+                            expression[count],count);
+                    MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                    return 0;
+                }
+            }
+            // está em um parênteses
+            count++;
+        }
+
+        // caractere inválido
+        else{
+            sprintf(message, "caractere nao valido %c na posicao %d",
+                    expression[count],count);
+            MATRIX_showError(&(*graphic), message, 0, __FILE__);
+            return 0;
+        }
+    }
 
     return 1;
 }
