@@ -47,8 +47,11 @@ void GRAPHICSCELLS_freeCells(WindowCell** cells, int maxCells, int count){
     if(count >= maxCells) return;
 
     if(cells[count]){
-        if(cells[count]->cell)
+        if(cells[count]->cell){
+            wclear(cells[count]->cell);
+            wrefresh(cells[count]->cell);
             delwin(cells[count]->cell);
+        }
         free(cells[count]);
         cells[count] = NULL;
     }

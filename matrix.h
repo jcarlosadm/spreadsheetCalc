@@ -16,6 +16,7 @@
 #include "functions.h"
 #include "undo_redo_cells.h"
 #include "graphics_cells.h"
+#include "graphics_instructions.h"
 
 /**
  * Estrutura da matriz de células da planilha
