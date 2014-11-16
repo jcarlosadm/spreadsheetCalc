@@ -275,8 +275,9 @@ void MATRIX_modDependencies(Matrix** matrix, int cellIndex, const char* expressi
  * Computa o valor da célula
  * \param matrix Ponteiro duplo para matriz de células
  * \param cellIndex Índice da célula no grafo que terá o valor atualizado
+ * \param graphic Ponteiro duplo para GraphicCells
  */
-void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex){
+void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphic){
     if(!matrix || !(*matrix)) return;
 
     // copia expressão para uma variável
@@ -308,10 +309,12 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex){
         }
 
         // número ou referência para uma célula
-        if((MIN_ASCII_NUMBER<= expression[count] &&
+        if((expression[count]!='+' && expression[count]!='-'
+                && expression[count]!='*' && expression[count]!='/') &&
+                ((MIN_ASCII_NUMBER<= expression[count] &&
                 expression[count]<=MAX_ASCII_NUMBER) ||
                 (expression[count+1]!=0 && (MIN_ASCII_NUMBER<= expression[count+1] &&
-                expression[count+1]<=MAX_ASCII_NUMBER))){
+                expression[count+1]<=MAX_ASCII_NUMBER)))){
 
             // referência para uma célula
             if(!(MIN_ASCII_NUMBER<= expression[count] &&
@@ -351,6 +354,7 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex){
 
                 // atualiza count
                 count = check;
+
             }
         }
 
@@ -361,6 +365,7 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex){
             STACKBINEXPTREE_pushSymbol(&stackBin, expression[count]);
             // vai para o próximo caractere
             count++;
+            printf("%s - %c\n",expression, expression[count]);
         }
 
         // função
@@ -442,6 +447,12 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex){
     // O valor da célula será o resultado da árvore de expressão binária
     (*matrix)->graph.cells[cellIndex]->value = STACKBINEXPTREE_pop(&stackBin);
 
+    // atualiza valor no gráfico
+    if(graphic && (*graphic))
+        GRAPHICSCELLS_updateCell(&(*graphic), MATRIX_getRow(cellIndex, (*matrix)->columns),
+                MATRIX_getColumn(cellIndex,(*matrix)->columns),
+                (*matrix)->graph.cells[cellIndex]->value, 0, 0);
+
     // libera pilha de árvore de expressão binária
     stackBin = STACKBINEXPTREE_free(stackBin);
 }
@@ -452,8 +463,10 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex){
  * \param cellIndex Índice da célula que terá células dependentes atualizadas
  * \param originalCell Índice da célula original que começou a recursão (no
  * início, cellIndex e originalCell possuem o mesmo valor)
+ * \param graphic Ponteiro duplo para GraphicCells
  */
-void MATRIX_evalCellDepsValue(Matrix** matrix, int cellIndex, int originalCell){
+void MATRIX_evalCellDepsValue(Matrix** matrix, int cellIndex, int originalCell,
+        GraphicCells** graphic){
 
     Dependency* dep = (*matrix)->graph.cells[cellIndex]->first;
     // enquanto o nó de dependência for diferente de nulo...
@@ -462,9 +475,9 @@ void MATRIX_evalCellDepsValue(Matrix** matrix, int cellIndex, int originalCell){
         // (isso evita o problema de loop infinito em referências cíclicas)
         if(dep->value != originalCell && dep->value != cellIndex){
             // atualiza valor da célula
-            MATRIX_evalCellValue(&(*matrix), dep->value);
+            MATRIX_evalCellValue(&(*matrix), dep->value, &(*graphic));
             // atualiza valor das células dependentes desta
-            MATRIX_evalCellDepsValue(&(*matrix), dep->value, originalCell);
+            MATRIX_evalCellDepsValue(&(*matrix), dep->value, originalCell, &(*graphic));
         }
         dep = dep->next;
     }
@@ -557,9 +570,10 @@ double MATRIX_getValue(Matrix** matrix, int row, int column){
  * \param expression expressão a ser colocada na célula
  * \param undoRedo Ponteiro duplo para fila de desfazer/refazer. Informe NULL caso
  * não queira guarda a informação na fila de desfazer/refazer
+ * \param graphic Ponteiro duplo para GraphicCells
  */
 int MATRIX_setExpression(Matrix** matrix, int row, int column, const char* expression,
-        UndoRedoCells** undoRedo){
+        UndoRedoCells** undoRedo, GraphicCells** graphic){
     if(!matrix || !(*matrix)) return 0;
 
     int cellIndex = MATRIX_evalCellIndex(row, column, (*matrix)->columns);
@@ -603,14 +617,15 @@ int MATRIX_setExpression(Matrix** matrix, int row, int column, const char* expre
             && !(*matrix)->graph.cells[cellIndex]->first){
         free((*matrix)->graph.cells[cellIndex]);
         (*matrix)->graph.cells[cellIndex] = NULL;
+        GRAPHICSCELLS_updateCell(&(*graphic), row, column, 0, 0, 1);
         return 1;
     }
 
     // computa o valor da célula
-    MATRIX_evalCellValue(&(*matrix), cellIndex);
+    MATRIX_evalCellValue(&(*matrix), cellIndex, &(*graphic));
 
     // percorre todas as dependências para atualizar todas as células que dependem desta
-    MATRIX_evalCellDepsValue(&(*matrix), cellIndex, cellIndex);
+    MATRIX_evalCellDepsValue(&(*matrix), cellIndex, cellIndex, &(*graphic));
 
     return 1;
 
@@ -621,8 +636,9 @@ int MATRIX_setExpression(Matrix** matrix, int row, int column, const char* expre
  * \return 1 se obtiver sucesso e 0 em caso contrário
  * \param matrix Ponteiro duplo para matriz Matrix
  * \param undoRedo Ponteiro duplo para fila de desfazer/refazer
+ * \param graphic Ponteiro duplo para GraphicCells
  */
-int MATRIX_undo(Matrix** matrix, UndoRedoCells** undoRedo){
+int MATRIX_undo(Matrix** matrix, UndoRedoCells** undoRedo, GraphicCells** graphic){
     if(!matrix || !(*matrix) || !undoRedo || !(*undoRedo)) return 0;
 
     if(!UNDOREDOCELLS_canUndo(&(*undoRedo))) return 0;
@@ -638,7 +654,7 @@ int MATRIX_undo(Matrix** matrix, UndoRedoCells** undoRedo){
     int column = MATRIX_getColumn(cellIndex, (*matrix)->columns);
 
     // preenche expressão da célula correta, sem colocar na pilha novamente
-    if(!MATRIX_setExpression(&(*matrix), row, column, expression, NULL)) return 0;
+    if(!MATRIX_setExpression(&(*matrix), row, column, expression, NULL, &(*graphic))) return 0;
 
     return 1;
 }
@@ -648,8 +664,9 @@ int MATRIX_undo(Matrix** matrix, UndoRedoCells** undoRedo){
  * \return 1 se obtiver sucesso e 0 em caso contrário
  * \param matrix Ponteiro duplo para matriz Matrix
  * \param undoRedo Ponteiro duplo para fila de desfazer/refazer
+ * \param graphic Ponteiro duplo para GraphicCells
  */
-int MATRIX_redo(Matrix** matrix, UndoRedoCells** undoRedo){
+int MATRIX_redo(Matrix** matrix, UndoRedoCells** undoRedo, GraphicCells** graphic){
     if(!matrix || !(*matrix) || !undoRedo || !(*undoRedo)) return 0;
 
     if(!UNDOREDOCELLS_canRedo(&(*undoRedo))) return 0;
@@ -665,7 +682,7 @@ int MATRIX_redo(Matrix** matrix, UndoRedoCells** undoRedo){
     int column = MATRIX_getColumn(cellIndex, (*matrix)->columns);
 
     // preenche expressão da célula correta, sem colocar na pilha novamente
-    if(!MATRIX_setExpression(&(*matrix), row, column, expression, NULL)) return 0;
+    if(!MATRIX_setExpression(&(*matrix), row, column, expression, NULL, &(*graphic))) return 0;
 
     return 1;
 }

@@ -15,6 +15,7 @@
 #include "stack_binExpTree.h"
 #include "functions.h"
 #include "undo_redo_cells.h"
+#include "graphics_cells.h"
 
 /**
  * Estrutura da matriz de células da planilha
@@ -63,24 +64,27 @@ double MATRIX_getValue(Matrix** matrix, int row, int column);
  * \param expression expressão a ser colocada na célula
  * \param undoRedo Ponteiro duplo para fila de desfazer/refazer. Informe NULL caso
  * não queira guarda a informação na fila de desfazer/refazer
+ * \param graphic Ponteiro duplo para GraphicCells
  */
 int MATRIX_setExpression(Matrix** matrix, int row, int column, const char* expression,
-        UndoRedoCells** undoRedo);
+        UndoRedoCells** undoRedo, GraphicCells** graphic);
 
 /**
  * Tenta realizar operação de desfazer na matriz de células
  * \return 1 se obtiver sucesso e 0 em caso contrário
  * \param matrix Ponteiro duplo para matriz Matrix
  * \param undoRedo Ponteiro duplo para fila de desfazer/refazer
+ * \param graphic Ponteiro duplo para GraphicCells
  */
-int MATRIX_undo(Matrix** matrix, UndoRedoCells** undoRedo);
+int MATRIX_undo(Matrix** matrix, UndoRedoCells** undoRedo, GraphicCells** graphic);
 
 /**
  * Tenta realizar operação de refazer na matriz de células
  * \return 1 se obtiver sucesso e 0 em caso contrário
  * \param matrix Ponteiro duplo para matriz Matrix
  * \param undoRedo Ponteiro duplo para fila de desfazer/refazer
+ * \param graphic Ponteiro duplo para GraphicCells
  */
-int MATRIX_redo(Matrix** matrix, UndoRedoCells** undoRedo);
+int MATRIX_redo(Matrix** matrix, UndoRedoCells** undoRedo, GraphicCells** graphic);
 
 #endif /* MATRIX_H_ */
