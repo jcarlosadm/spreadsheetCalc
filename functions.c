@@ -179,6 +179,9 @@ ListDouble* FUNCTIONS_addValue(ListDouble* list, double value){
  * \param list Ponteiro duplo para lista de doubles
  */
 double FUNCTIONS_evalFunction(const char* function, ListDouble** list){
+
+    if(!FUNCTIONS_isFunction(function)) return 0;
+
     if(strcmp(function, "sum")==0)
         return FUNCTIONS_sum(&(*list));
     else if(strcmp(function, "mean")==0)
