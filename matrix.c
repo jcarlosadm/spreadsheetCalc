@@ -88,6 +88,39 @@ void MATRIX_freeGraphCells(Cell** cells, int index){
 }
 
 /**
+ * Verifica se um caractere é número
+ * \return 1 se for número, 0 em caso contrário
+ * \param value Caractere a ser testado
+ */
+int MATRIX_charIsNumber(char value){
+    return (MIN_ASCII_NUMBER<= value && value<=MAX_ASCII_NUMBER);
+}
+
+/**
+ * Verifica se um caractere é letra do alfabeto
+ * \return 0 se não for letra de alfabeto, 1 se for letra maiúscula e
+ * 2 se for letra minúscula
+ * \param value Caractere a ser testado
+ */
+int MATRIX_charIsAlpha(char value){
+    if(MIN_ASCII_CAP_LETTER<= value && value<=MAX_ASCII_CAP_LETTER)
+        return 1;
+    else if(MIN_ASCII_LETTER<= value && value<=MAX_ASCII_LETTER)
+        return 2;
+    else
+        return 0;
+}
+
+/**
+ * Verifica se um caractere é um operador (+, -, * ou /)
+ * \return 1 se for um operador, 0 em caso contrário
+ * \param value Caractere a ser testado
+ */
+int MATRIX_charIsOperator(char value){
+    return (value=='+' || value=='-' || value=='*' || value=='/');
+}
+
+/**
  * Calcula índice da célula no grafo com base na linha e coluna
  * \return Valor do índice da célula no grafo
  * \param row Linha da célula
@@ -133,7 +166,7 @@ int MATRIX_getCellIndex_fromReference(const char *expression, int *count, int co
 
     // pega valor ascii do caractere e converte para um valor de coluna
     letter = expression[(*count)];
-    if(MIN_ASCII_CAP_LETTER<= letter && letter <= MAX_ASCII_CAP_LETTER)
+    if(MATRIX_charIsAlpha(letter)==1)
         coords[1] = letter - MIN_ASCII_CAP_LETTER+1;
     else
         coords[1] = letter - MIN_ASCII_LETTER+1;
@@ -244,8 +277,7 @@ void MATRIX_modDependencies(Matrix** matrix, int cellIndex, const char* expressi
 
         // pula caracteres conhecidos não válidos
         if(expression[count]=='(' || expression[count]==')' || expression[count]==' '
-                || expression[count]=='+' || expression[count]=='-'
-                || expression[count]=='*' || expression[count]=='/'
+                || MATRIX_charIsOperator(expression[count])
                 || expression[count]==',' || expression[count]=='.'){
             count++;
             continue;
@@ -253,9 +285,8 @@ void MATRIX_modDependencies(Matrix** matrix, int cellIndex, const char* expressi
 
         // faz comparações com base na table ascii
         // um caractere não-número seguido de um número?
-        if(!(MIN_ASCII_NUMBER<= expression[count] && expression[count]<=MAX_ASCII_NUMBER)
-                && expression[count+1]!=0 && (MIN_ASCII_NUMBER<= expression[count+1]
-                && expression[count+1]<=MAX_ASCII_NUMBER)){
+        if(MATRIX_charIsAlpha(expression[count])
+                && expression[count+1]!=0 && MATRIX_charIsNumber(expression[count+1])){
 
             // pega índice da célula no grafo
             cellDestiny = MATRIX_getCellIndex_fromReference(expression, &count,
@@ -309,59 +340,49 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphi
         }
 
         // operador
-        if(expression[count]=='+' || expression[count]=='-'
-                || expression[count]=='*' || expression[count]=='/'){
+        if(MATRIX_charIsOperator(expression[count])){
             // adiciona operador na pilha de expressão binária
             STACKBINEXPTREE_pushSymbol(&stackBin, expression[count]);
             // vai para o próximo caractere
             count++;
         }
 
-        // número ou referência para uma célula
-        else if((MIN_ASCII_NUMBER<= expression[count] && expression[count]<=MAX_ASCII_NUMBER)
-                || (expression[count+1]!=0 && (MIN_ASCII_NUMBER<= expression[count+1] &&
-                expression[count+1]<=MAX_ASCII_NUMBER))){
-
-            // referência para uma célula
-            if(!(MIN_ASCII_NUMBER<= expression[count] &&
-                    expression[count]<=MAX_ASCII_NUMBER)){
-
-                // pega índice da célula com base na referência
-                cellTempIndex = MATRIX_getCellIndex_fromReference(expression, &count,
-                        (*matrix)->columns);
-
-                // coloca valor na pilha de expressão binária
-                if(!(*matrix)->graph.cells[cellTempIndex])
-                    STACKBINEXPTREE_pushValue(&stackBin, 0);
-                else
-                    STACKBINEXPTREE_pushValue(&stackBin,
-                            (*matrix)->graph.cells[cellTempIndex]->value);
-                // vai para o próximo caractere
-                count++;
+        // número
+        else if(MATRIX_charIsNumber(expression[count])){
+            // usa check para percorrer a expressão mantendo count no lugar
+            check = count;
+            // enquanto for caractere pertencente ao número...
+            while(MATRIX_charIsNumber(expression[check]) || expression[check]=='.'){
+                // vai preenchendo number_char
+                number_char[check-count]=expression[check];
+                check++;
             }
+            // final de linha
+            number_char[check-count]=0;
 
-            // número
-            else{
-                // usa check para percorrer a expressão mantendo count no lugar
-                check = count;
-                // enquanto for caractere pertencente ao número...
-                while(expression[check]!=' ' && ((MIN_ASCII_NUMBER<= expression[check] &&
-                        expression[check]<=MAX_ASCII_NUMBER)||expression[check]=='.')
-                        && expression[check]!=0){
-                    // vai preenchendo number_char
-                    number_char[check-count]=expression[check];
-                    check++;
-                }
-                // final de linha
-                number_char[check-count]=0;
+            // adiciona valor na pilha de expressão binária
+            STACKBINEXPTREE_pushValue(&stackBin, atof(number_char));
 
-                // adiciona valor na pilha de expressão binária
-                STACKBINEXPTREE_pushValue(&stackBin, atof(number_char));
+            // atualiza count
+            count = check;
+        }
 
-                // atualiza count
-                count = check;
+        // referência para uma célula
+        else if(MATRIX_charIsAlpha(expression[count]) && expression[count+1]!=0
+                && MATRIX_charIsNumber(expression[count+1]) ){
 
-            }
+            // pega índice da célula com base na referência
+            cellTempIndex = MATRIX_getCellIndex_fromReference(expression, &count,
+                    (*matrix)->columns);
+
+            // coloca valor na pilha de expressão binária
+            if(!(*matrix)->graph.cells[cellTempIndex])
+                STACKBINEXPTREE_pushValue(&stackBin, 0);
+            else
+                STACKBINEXPTREE_pushValue(&stackBin,
+                        (*matrix)->graph.cells[cellTempIndex]->value);
+            // vai para o próximo caractere
+            count++;
         }
 
         // função
@@ -379,7 +400,7 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphi
             // final de linha
             function[check-count]=0;
 
-            // atualiza count para um caractere a mais que check
+            // atualiza count para um caractere a mais que check, para pular o parênteses
             count=check+1;
             // cria lista de valores a ser usada com a função
             list = FUNCTIONS_createList();
@@ -387,15 +408,15 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphi
             // enquanto o caractere não for fechar parênteses...
             while(expression[count]!=')'){
 
-                // pula vírgulas
-                if(expression[count]==','){
+                // pula vírgulas e espaços
+                if(expression[count]==',' || expression[count]==' '){
                     count++;
                     continue;
                 }
 
                 // uma referência de célula
-                if(!(MIN_ASCII_NUMBER<= expression[count] &&
-                        expression[count]<=MAX_ASCII_NUMBER)){
+                if(MATRIX_charIsAlpha(expression[count])
+                        && MATRIX_charIsNumber(expression[count+1])){
 
                     // pega índice da célula no grafo
                     cellTempIndex = MATRIX_getCellIndex_fromReference(expression, &count,
@@ -427,7 +448,6 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphi
 
                     // atualiza count
                     count = check;
-
                 }
             }
             // pula para o próximo caractere (que está em um fecha parênteses)
