@@ -800,13 +800,18 @@ int MATRIX_setExpression(Matrix** matrix, int row, int column, const char* expre
     }
 
     // computa o valor da célula
+    // necessário mesmo quando célula não contém expressão, pois o valor precisa,
+    // neste caso, ser atualizado para 0
     MATRIX_evalCellValue(&(*matrix), cellIndex, &(*graphic));
+
+    // se a célula não contém expressão, então é célula vazia
+    if(strcmp((*matrix)->graph.cells[cellIndex]->expression, "")==0)
+        GRAPHICSCELLS_updateCell(&(*graphic), row, column, 0, 0, 1);
 
     // percorre todas as dependências para atualizar todas as células que dependem desta
     MATRIX_evalCellDepsValue(&(*matrix), cellIndex, cellIndex, &(*graphic));
 
     return 1;
-
 }
 
 /**
