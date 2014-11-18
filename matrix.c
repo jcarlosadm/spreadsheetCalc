@@ -36,6 +36,7 @@ typedef struct cell Cell;
 struct cell{
     Dependency* first;
     char expression[60];
+
     double value;
 };
 
@@ -298,21 +299,74 @@ void MATRIX_addDependency(Cell** cell, int value){
 void MATRIX_modDependencies(Matrix** matrix, int cellIndex, const char* expression,
         int isRemove){
 
+    // variáveis para computar intervalos
+    // primeira célula e última célula
+    int firstCell, lastCell;
+    // guarda primeira e última linha, primeira e última coluna
+    int firstRow, lastRow, firstColumn, lastColumn;
+    // percorre linha e coluna
+    int countRow, countColumn;
+    // flag que indica qual a célula já computada anteriormente
+    int computeFirstCell;
+
     int count=0, cellDestiny;
     // percorre a expressão
     while(expression[count]!=0){
 
-        // pula caracteres conhecidos não válidos
-        if(expression[count]=='(' || expression[count]==')' || expression[count]==' '
-                || MATRIX_charIsOperator(expression[count])
-                || expression[count]==',' || expression[count]=='.'){
+        // se encontrou dois pontos, então computa intervalo
+        if(expression[count]==':'){
+            // pula os dois pontos
             count++;
-            continue;
+            // pula espaços em branco
+            while(expression[count]==' ')
+                count++;
+
+            // pega segunda referência
+            cellDestiny = MATRIX_getCellIndex_fromReference(expression, &count,
+                    (*matrix)->columns);
+
+            // verifica qual a referência maior e configura lastCell e firstCell de acordo
+            if(firstCell > cellDestiny){
+                lastCell = firstCell;
+                firstCell = cellDestiny;
+                computeFirstCell = true;
+            }else{
+                lastCell = cellDestiny;
+                computeFirstCell=false;
+            }
+
+            // configura variáveis de intervalo
+            firstRow = MATRIX_getRow(firstCell,(*matrix)->columns);
+            lastRow = MATRIX_getRow(lastCell,(*matrix)->columns);
+            firstColumn = MATRIX_getColumn(firstCell, (*matrix)->columns);
+            lastColumn = MATRIX_getColumn(lastCell, (*matrix)->columns);
+
+            // percorre intervalo de células
+            for(countRow = firstRow; countRow<=lastRow; countRow++){
+                for(countColumn = firstColumn; countColumn <= lastColumn; countColumn++){
+                    // não computa primeira ou última célula
+                    if((!computeFirstCell && (countColumn!=firstColumn || countRow!=firstRow))
+                        || (computeFirstCell
+                            && ( countColumn!=lastColumn || countRow!=lastRow ))){
+                        // pega índice da célula
+                        cellDestiny = MATRIX_evalCellIndex(countRow, countColumn,
+                                (*matrix)->columns);
+
+                        // remove ou adiciona
+                        if(isRemove)
+                            MATRIX_removeDependency(&((*matrix)->graph.cells[cellDestiny]),
+                                    cellIndex);
+                        else
+                            MATRIX_addDependency(&((*matrix)->graph.cells[cellDestiny]),
+                                    cellIndex);
+                    }
+                }
+            }
         }
 
         // faz comparações com base na table ascii
         // um caractere não-número seguido de um número?
-        if(MATRIX_charIsAlpha(expression[count])
+        else if(MATRIX_charIsAlpha(expression[count])
                 && expression[count+1]!=0 && MATRIX_charIsNumber(expression[count+1])){
 
             // pega índice da célula no grafo
@@ -324,7 +378,11 @@ void MATRIX_modDependencies(Matrix** matrix, int cellIndex, const char* expressi
                 MATRIX_removeDependency(&((*matrix)->graph.cells[cellDestiny]), cellIndex);
             else
                 MATRIX_addDependency(&((*matrix)->graph.cells[cellDestiny]), cellIndex);
+
+            // presume que essa referência é a primeira de um intervalo
+            firstCell = cellDestiny;
         }
+        // pula um caractere
         count++;
     }
 }
@@ -336,7 +394,7 @@ void MATRIX_modDependencies(Matrix** matrix, int cellIndex, const char* expressi
  * \param graphic Ponteiro duplo para GraphicCells
  */
 void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphic){
-    if(!matrix || !(*matrix)) return;
+    if(!matrix || !(*matrix) || !(*matrix)->graph.cells[cellIndex]) return;
 
     // copia expressão para uma variável
     char expression[60];
@@ -356,6 +414,19 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphi
     // Pilha de árvore de expressão binária
     StackBinExpTree* stackBin = STACKBINEXPTREE_create();
 
+    // conta quantidade de vírgulas em uma função
+    int countComma;
+
+    // variáveis para computar intervalos
+    // primeira célula e última célula
+    int firstCell, lastCell;
+    // guarda primeira e última linha, primeira e última coluna
+    int firstRow, lastRow, firstColumn, lastColumn;
+    // percorre linha e coluna
+    int countRow, countColumn;
+    // flag que indica qual a célula já computada anteriormente
+    int computeFirstCell;
+
     // percorre expressão
     int count=0, check;
     while(expression[count] != 0){
@@ -363,11 +434,10 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphi
         // pula espaços em branco
         if(expression[count]==' '){
             count++;
-            continue;
         }
 
         // operador
-        if(MATRIX_charIsOperator(expression[count])){
+        else if(MATRIX_charIsOperator(expression[count])){
             // adiciona operador na pilha de expressão binária
             STACKBINEXPTREE_pushSymbol(&stackBin, expression[count]);
             // vai para o próximo caractere
@@ -432,17 +502,77 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphi
             // cria lista de valores a ser usada com a função
             list = FUNCTIONS_createList();
 
+            // inicializa contador de vírgulas
+            countComma=0;
+
             // enquanto o caractere não for fechar parênteses...
             while(expression[count]!=')'){
 
-                // pula vírgulas e espaços
-                if(expression[count]==',' || expression[count]==' '){
+                // pula espaços
+                if(expression[count]==' '){
                     count++;
-                    continue;
+                }
+
+                // pula vírgulas
+                else if(expression[count]==','){
+                    count++;
+                    countComma++;
+                }
+
+                // se encontrou dois pontos, inicializa intervalo
+                else if(expression[count]==':'){
+                    // pula os dois pontos
+                    count++;
+                    // pula espaços em branco
+                    while(expression[count]==' ')
+                        count++;
+
+                    // pega segunda referência
+                    cellTempIndex = MATRIX_getCellIndex_fromReference(expression, &count,
+                            (*matrix)->columns);
+
+                    // verifica qual a referência maior e configura lastCell e firstCell de acordo
+                    if(firstCell > cellTempIndex){
+                        lastCell = firstCell;
+                        firstCell = cellTempIndex;
+                        computeFirstCell = true;
+                    }else{
+                        lastCell = cellTempIndex;
+                        computeFirstCell=false;
+                    }
+
+                    // configura variáveis de intervalo
+                    firstRow = MATRIX_getRow(firstCell,(*matrix)->columns);
+                    lastRow = MATRIX_getRow(lastCell,(*matrix)->columns);
+                    firstColumn = MATRIX_getColumn(firstCell, (*matrix)->columns);
+                    lastColumn = MATRIX_getColumn(lastCell, (*matrix)->columns);
+
+                    // percorre intervalo de células
+                    for(countRow = firstRow; countRow<=lastRow; countRow++){
+                        for(countColumn = firstColumn; countColumn <= lastColumn; countColumn++){
+                            // não computa primeira ou última célula
+                            if((!computeFirstCell && (countColumn!=firstColumn ||
+                                    countRow!=firstRow))
+                                || (computeFirstCell
+                                    && ( countColumn!=lastColumn || countRow!=lastRow ))){
+                                // pega índice da célula
+                                cellTempIndex = MATRIX_evalCellIndex(countRow, countColumn,
+                                        (*matrix)->columns);
+                                // adiciona na lista da função
+                                if(!(*matrix)->graph.cells[cellTempIndex])
+                                    list = FUNCTIONS_addValue(list, 0);
+                                else
+                                    list = FUNCTIONS_addValue(list,
+                                            (*matrix)->graph.cells[cellTempIndex]->value);
+                            }
+                        }
+                    }
+                    // pula para o próximo caractere
+                    count++;
                 }
 
                 // uma referência de célula
-                if(MATRIX_charIsAlpha(expression[count])
+                else if(MATRIX_charIsAlpha(expression[count])
                         && MATRIX_charIsNumber(expression[count+1])){
 
                     // pega índice da célula no grafo
@@ -454,6 +584,11 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphi
                     else
                         list = FUNCTIONS_addValue(list,
                                 (*matrix)->graph.cells[cellTempIndex]->value);
+
+                    // se não encontrou vírgula, é possível primeira célula de um intervalo
+                    if(!countComma)
+                        firstCell = cellTempIndex;
+
                     // pula para o próximo caractere
                     count++;
                 }
@@ -697,7 +832,8 @@ int MATRIX_undo(Matrix** matrix, UndoRedoCells** undoRedo, GraphicCells** graphi
     int column = MATRIX_getColumn(cellIndex, (*matrix)->columns);
 
     // preenche expressão da célula correta, sem colocar na pilha novamente
-    if(!MATRIX_setExpression(&(*matrix), row, column, expression, NULL, &(*graphic))) return 0;
+    if(!MATRIX_setExpression(&(*matrix), row, column, expression, NULL, &(*graphic)))
+        return 0;
 
     return 1;
 }
@@ -759,6 +895,23 @@ int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int colum
     // maior número para a linha
     int intLimit = rows + MIN_ASCII_NUMBER;
 
+    // guarda a quantidade de elementos da pilha (cada número, referência
+    // ou função aumenta a pilha em um; cada operação pega dois elementos
+    // da pilha e coloca o resultado no lugar)
+    int stack=0;
+
+    // conta quantidade de vírgulas em uma função
+    int countComma;
+    // conta quantidade de dois pontos em uma função
+    int countColon;
+
+    // guarda o tipo do primeiro argumento de uma função
+    // se 'n', é número
+    // se 'r', é referência
+    char typeFirstArgument;
+    // conta quantidade de referências nos argumentos de uma função
+    int countReference;
+
     int count=0, check;
     while(expression[count] != 0){
 
@@ -769,11 +922,16 @@ int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int colum
         }
 
         // operador
-        if(MATRIX_charIsOperator(expression[count]))
+        if(MATRIX_charIsOperator(expression[count])){
+            // a pilha diminui em um
+            stack--;
             count++;
+        }
 
         // número
         else if(MATRIX_charIsNumber(expression[count])){
+            // a pilha aumenta em um
+            stack++;
             while(MATRIX_charIsNumber(expression[count]) || expression[count]=='.')
                 count++;
             if(expression[count]!=0 && expression[count]!=' '
@@ -781,7 +939,7 @@ int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int colum
                     && !MATRIX_charIsOperator(expression[count])){
                 sprintf(message, "caractere nao valido %c na posicao %d",
                         expression[count],count);
-                MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                MATRIX_showError(&(*graphic), message, 0, "");
 
                 return 0;
             }
@@ -790,6 +948,9 @@ int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int colum
         // referência de célula
         else if(MATRIX_charIsAlpha(expression[count]) && expression[count+1]!=0
                 && MATRIX_charIsNumber(expression[count+1])){
+
+            // a pilha aumenta em um
+            stack++;
 
             if(MATRIX_charIsAlpha(expression[count])==1 && expression[count] > charLimitCap){
                 sprintf(message,
@@ -803,7 +964,7 @@ int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int colum
                 sprintf(message,
                    "a referencia %c, na posicao %d, vai alem da quantidade de colunas",
                    expression[count],count);
-                MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                MATRIX_showError(&(*graphic), message, 0, "");
                 return 0;
             }
 
@@ -813,7 +974,7 @@ int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int colum
                 sprintf(message,
                    "a referencia %c, na posicao %d, vai alem da quantidade de linhas",
                    expression[count],count);
-                MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                MATRIX_showError(&(*graphic), message, 0,"");
                 return 0;
             }
             // vai para o próximo caractere
@@ -823,6 +984,9 @@ int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int colum
         // função
         else if(MATRIX_charIsAlpha(expression[count]) && expression[count+1]!=0
                 && MATRIX_charIsAlpha(expression[count+1])){
+
+            // a pilha aumenta em um
+            stack++;
 
             // usa check para percorrer a expressão mantendo count no lugar
             check=count;
@@ -838,17 +1002,51 @@ int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int colum
             // se a função não existir, sai com erro
             if(!FUNCTIONS_isFunction(function)){
                 sprintf(message, "funcao %s nao existente na posicao %d", function,count);
-                MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                MATRIX_showError(&(*graphic), message, 0, "");
                 return 0;
             }
             // count é um caractere a mais que check
             count= check+1;
 
+            // contadores de vírgula e de dois pontos começam em zero
+            countColon = 0;
+            countComma = 0;
+            // contador de referências começa em zero
+            countReference = 0;
+
             // enquanto não encontrar um fecha parênteses...
             while(expression[count]!=')'){
 
-                //pula vírgulas e espaços
-                if(expression[count]==' ' || expression[count]==','){
+                // pula espaços
+                if(expression[count]==' '){
+                    count++;
+                    continue;
+                }
+
+                // pula vírgulas
+                if(expression[count]==','){
+                    // se já foi usado dois pontos, erro
+                    if(countColon){
+                        sprintf(message,"expressao inadequada na funcao %s",function);
+                        MATRIX_showError(&(*graphic), message, 0,"");
+                        return 0;
+                    }
+
+                    countComma++;
+                    count++;
+                    continue;
+                }
+
+                // pula dois pontos
+                if(expression[count]==':'){
+                    // se já foi usado vírgula ou dois pontos, erro
+                    if(countComma || countColon){
+                        sprintf(message,"expressao inadequada na funcao %s",function);
+                        MATRIX_showError(&(*graphic), message, 0,"");
+                        return 0;
+                    }
+
+                    countColon++;
                     count++;
                     continue;
                 }
@@ -856,55 +1054,75 @@ int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int colum
                 // número
                 if(MATRIX_charIsNumber(expression[count])){
 
-                    while(MATRIX_charIsNumber(expression[count]) || expression[count]=='.')
-                        count++;
-
-                    if(expression[count]!=')' && expression[count]!=' '
-                            && expression[count]!=','){
-
-                        if(expression[count]==0){
-                            sprintf(message,
-                                    "parenteses nao fechou antes do final da expressao");
-                            MATRIX_showError(&(*graphic), message, 0, __FILE__);
-                            return 0;
-                        }
-
-                        sprintf(message, "caractere nao valido %c na posicao %d",
-                                expression[count],count);
-                        MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                    // se precedido de dois pontos, erro
+                    if(countColon){
+                        sprintf(message,"expressao inadequada na funcao %s",function);
+                        MATRIX_showError(&(*graphic), message, 0,"");
                         return 0;
                     }
+
+                    // se não encontrou dois pontos ou vírgula, esse é o primeiro
+                    // argumento
+                    if(!countColon && !countComma)
+                        typeFirstArgument = 'n';
+
+                    while(MATRIX_charIsNumber(expression[count]) || expression[count]=='.')
+                        count++;
                 }
                 // referência de célula
                 else if(MATRIX_charIsAlpha(expression[count]) && expression[count+1]!=0
                         && MATRIX_charIsNumber(expression[count+1])){
 
+                    countReference++;
+
+                    // se apareceu dois pontos e tem mais de duas referências, erro
+                    if(countColon && countReference > 2){
+                        sprintf(message,"expressao inadequada na funcao %s",function);
+                        MATRIX_showError(&(*graphic), message, 0, "");
+                        return 0;
+                    }
+
+                    // se não encontrou dois pontos ou vírgula, primeiro argumento
+                    if(!countColon && !countComma){
+                        typeFirstArgument = 'r';
+                    }
+                    // se precedido de dois pontos, e primeiro argumento é número, erro
+                    else if(countColon && typeFirstArgument=='n'){
+                        sprintf(message,"expressao inadequada na funcao %s",function);
+                        MATRIX_showError(&(*graphic), message, 0, "");
+                        return 0;
+                    }
+
+                    // referência vai além da quantidade de colunas
                     if(MATRIX_charIsAlpha(expression[count])==1
                             && expression[count] > charLimitCap){
                         sprintf(message,
-                           "a referencia %c, na posicao %d, vai alem da quantidade de colunas",
+                     "a referencia %c, na posicao %d, vai alem da quantidade de colunas",
                            expression[count],count);
-                        MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                        MATRIX_showError(&(*graphic), message, 0, "");
                         return 0;
                     }
                     else if(MATRIX_charIsAlpha(expression[count])==2
                             && expression[count] > charLimit){
                         sprintf(message,
-                           "a referencia %c, na posicao %d, vai alem da quantidade de colunas",
+                    "a referencia %c, na posicao %d, vai alem da quantidade de colunas",
                            expression[count],count);
-                        MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                        MATRIX_showError(&(*graphic), message, 0, "");
                         return 0;
                     }
 
                     // vai para a parte numérica da referência
                     count++;
+
+                    // referência vai além da quantidade de linhas
                     if(expression[count] > intLimit){
                         sprintf(message,
-                           "a referencia %c, na posicao %d, vai alem da quantidade de linhas",
+                      "a referencia %c, na posicao %d, vai alem da quantidade de linhas",
                            expression[count],count);
-                        MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                        MATRIX_showError(&(*graphic), message, 0,"");
                         return 0;
                     }
+
                     // vai para o próximo caractere
                     count++;
                 }
@@ -913,13 +1131,13 @@ int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int colum
 
                     if(expression[count]==0){
                         sprintf(message, "parenteses nao fechou antes do final da expressao");
-                        MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                        MATRIX_showError(&(*graphic), message, 0, "");
                         return 0;
                     }
 
                     sprintf(message, "caractere nao valido %c na posicao %d",
                             expression[count],count);
-                    MATRIX_showError(&(*graphic), message, 0, __FILE__);
+                    MATRIX_showError(&(*graphic), message, 0, "");
                     return 0;
                 }
             }
@@ -931,9 +1149,26 @@ int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int colum
         else{
             sprintf(message, "caractere nao valido %c na posicao %d",
                     expression[count],count);
-            MATRIX_showError(&(*graphic), message, 0, __FILE__);
+            MATRIX_showError(&(*graphic), message, 0, "");
             return 0;
         }
+
+        // ao final de cada iteração stack deve ser maior ou igual a 1
+        // se for menor que 1, a quantidade de elementos vs operadores está desbalanceada
+        if(stack<1){
+            sprintf(message, "desbalanceamento entre operadores e operandos");
+            MATRIX_showError(&(*graphic), message, 0,"");
+            return 0;
+        }
+    }
+
+    // a variável stack deve ser 1
+    // se for maior que 1, alguns operandos não foram usados
+    // se for menor que 1, não há operandos suficientes
+    if(stack!=1){
+        sprintf(message, "desbalanceamento entre operadores e operandos");
+        MATRIX_showError(&(*graphic), message, 0,"");
+        return 0;
     }
 
     return 1;
