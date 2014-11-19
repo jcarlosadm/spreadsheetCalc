@@ -108,11 +108,6 @@ void MATRIX_showError(GraphicInstructions** graphic, const char *errorMessage,
         }
         return;
     }
-
-    if(line)
-        printf("%s\nIn line %d and file %s",errorMessage, line, filename);
-    else
-        printf("%s\n",errorMessage);
 }
 
 /**
@@ -661,6 +656,42 @@ void MATRIX_evalCellDepsValue(Matrix** matrix, int cellIndex, int originalCell,
     }
 }
 
+/**
+ * Procura recursivamente por dependência cíclica
+ * \return 1 se encontrar dependência cíclica, e 0 se não encontrar
+ * \param cellIndex índice da célula atual que está realizando a checagem
+ * \param indexCheck Índice a ser checado (que pode causar uma referência cíclica)
+ * \param matrix Ponteiro duplo para Matrix, que possui informações sobre as células
+ */
+int MATRIX_checkCyclicDependencyRecursive(int cellIndex, int indexCheck,
+        Matrix** matrix){
+
+    if(!(*matrix)->graph.cells[cellIndex]) return 0;
+
+    Dependency* cellDependency = (*matrix)->graph.cells[cellIndex]->first;
+
+    int result;
+
+    // percorre as dependências da célula atual
+    while(cellDependency){
+        // se a dependência atual bate com o índice da célula atual, erro
+        if(cellDependency->value == indexCheck){
+            return 1;
+        }
+        // chama função recursiva para checar na célula dependente
+        result = MATRIX_checkCyclicDependencyRecursive(cellDependency->value,
+                indexCheck, &(*matrix));
+
+        // encontrou dependência cíclica
+        if(result) return 1;
+
+        cellDependency = cellDependency->next;
+    }
+
+    // tudo ok
+    return 0;
+}
+
 /****************************************************************************
  * Funções públicas
  ****************************************************************************/
@@ -1177,4 +1208,138 @@ int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int colum
     }
 
     return 1;
+}
+
+/**
+ * Checa se haverá dependência cíclica se uma expressão for configurada em uma célula
+ * \return 1 se houver dependência na expressão, 0 em caso contrário
+ * \param rows Quantidade de linhas da matriz de células
+ * \param columns Quantidade de colunas da matriz de células
+ * \param expression Expressão a ser validada
+ * \param matrix Ponteiro duplo para matriz Matrix
+ */
+int MATRIX_checkCyclicDependency(int row, int column, const char* expression, Matrix** matrix){
+
+    if(!matrix || !(*matrix)) return 0;
+
+    // calcula o índice da célula atual
+    int cellIndex = MATRIX_evalCellIndex(row,column, (*matrix)->columns);
+
+    if(!(*matrix)->graph.cells[cellIndex]) return 0;
+
+    // Ponteiro usado para realizar iterações nas dependências da célula
+    Dependency* cellDependency = NULL;
+
+    // variáveis para computar intervalos
+    // primeira célula e última célula
+    int firstCell, lastCell;
+    // guarda primeira e última linha, primeira e última coluna
+    int firstRow, lastRow, firstColumn, lastColumn;
+    // percorre linha e coluna
+    int countRow, countColumn;
+    // flag que indica qual a célula já computada anteriormente
+    int computeFirstCell;
+
+    // guarda o resultado da chamada de função recursiva para verificação de dependências cíclicas
+    int result;
+
+    int count=0, cellDestiny;
+    // percorre a expressão
+    while(expression[count]!=0){
+
+        // se encontrou dois pontos, então computa intervalo
+        if(expression[count]==':'){
+            // pula os dois pontos
+            count++;
+            // pula espaços em branco
+            while(expression[count]==' ')
+                count++;
+
+            // pega segunda referência
+            cellDestiny = MATRIX_getCellIndex_fromReference(expression, &count,
+                    (*matrix)->columns);
+
+            // verifica qual a referência maior e configura lastCell e firstCell de acordo
+            if(firstCell > cellDestiny){
+                lastCell = firstCell;
+                firstCell = cellDestiny;
+                computeFirstCell = true;
+            }else{
+                lastCell = cellDestiny;
+                computeFirstCell=false;
+            }
+
+            // configura variáveis de intervalo
+            firstRow = MATRIX_getRow(firstCell,(*matrix)->columns);
+            lastRow = MATRIX_getRow(lastCell,(*matrix)->columns);
+            firstColumn = MATRIX_getColumn(firstCell, (*matrix)->columns);
+            lastColumn = MATRIX_getColumn(lastCell, (*matrix)->columns);
+
+            // percorre intervalo de células
+            for(countRow = firstRow; countRow<=lastRow; countRow++){
+                for(countColumn = firstColumn; countColumn <= lastColumn; countColumn++){
+                    // não computa primeira ou última célula
+                    if((!computeFirstCell && (countColumn!=firstColumn || countRow!=firstRow))
+                        || (computeFirstCell
+                            && ( countColumn!=lastColumn || countRow!=lastRow ))){
+                        // pega índice da célula
+                        cellDestiny = MATRIX_evalCellIndex(countRow, countColumn,
+                                (*matrix)->columns);
+
+                        // percorre dependências da célula
+                        cellDependency = (*matrix)->graph.cells[cellIndex]->first;
+                        while(cellDependency){
+                            // se a dependência atual bate com o índice da célula atual, erro
+                            if(cellDependency->value == cellDestiny){
+                                return 1;
+                            }
+                            // chama função recursiva para checar na célula dependente
+                            result = MATRIX_checkCyclicDependencyRecursive(cellDependency->value,
+                                    cellDestiny, &(*matrix));
+
+                            // encontrou dependência cíclica
+                            if(result) return 1;
+
+                            cellDependency = cellDependency->next;
+                        }
+                    }
+                }
+            }
+        }
+
+        // faz comparações com base na table ascii
+        // um caractere não-número seguido de um número?
+        else if(MATRIX_charIsAlpha(expression[count])
+                && expression[count+1]!=0 && MATRIX_charIsNumber(expression[count+1])){
+
+            // pega índice da célula no grafo
+            cellDestiny = MATRIX_getCellIndex_fromReference(expression, &count,
+                    (*matrix)->columns);
+
+            // percorre dependências da célula
+            cellDependency = (*matrix)->graph.cells[cellIndex]->first;
+            while(cellDependency){
+                // se a dependência atual bate com o índice da célula atual, erro
+                if(cellDependency->value == cellDestiny){
+                    return 1;
+                }
+                // chama função recursiva para checar na célula dependente
+                result = MATRIX_checkCyclicDependencyRecursive(cellDependency->value,
+                        cellDestiny, &(*matrix));
+
+                // encontrou dependência cíclica
+                if(result) return 1;
+
+                cellDependency = cellDependency->next;
+            }
+
+            // presume que essa referência é a primeira de um intervalo
+            firstCell = cellDestiny;
+        }
+        // pula um caractere
+        count++;
+    }
+
+    // tudo ok
+    return 0;
 }

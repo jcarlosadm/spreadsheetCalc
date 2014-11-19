@@ -100,4 +100,14 @@ int MATRIX_redo(Matrix** matrix, UndoRedoCells** undoRedo, GraphicCells** graphi
 int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int columns,
         const char *expression);
 
+/**
+ * Checa se haverá dependência cíclica se uma expressão for configurada em uma célula
+ * \return 1 se houver dependência na expressão, 0 em caso contrário
+ * \param rows Quantidade de linhas da matriz de células
+ * \param columns Quantidade de colunas da matriz de células
+ * \param expression Expressão a ser validada
+ * \param matrix Ponteiro duplo para matriz Matrix
+ */
+int MATRIX_checkCyclicDependency(int row, int column, const char* expression, Matrix** matrix);
+
 #endif /* MATRIX_H_ */
