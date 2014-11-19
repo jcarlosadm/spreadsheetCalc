@@ -122,7 +122,7 @@ void GRAPHICINST_writeKeyboard(GraphicInstructions** graphic, int positionX,
         int positionY){
     if(!graphic || !(*graphic)) return;
 
-    char keyboardString[] = "LEFT <-   RIGHT ->   UP ^   DOWN v";
+    char keyboardString[] = "LEFT <-   RIGHT ->   UP ^   DOWN v     ENTER";
 
     mvwprintw((*graphic)->instructionsWindow, positionY, positionX, "%s", keyboardString);
     wrefresh((*graphic)->instructionsWindow);

@@ -57,7 +57,7 @@ struct graphicCells{
  ***************************************************************************/
 
 void GRAPHICSCELLS_freeCells(WindowCell** cells, int maxCells, int count){
-    printf("%d\n", maxCells);
+
     if(count >= maxCells) return;
 
     if(cells[count]){
@@ -67,6 +67,10 @@ void GRAPHICSCELLS_freeCells(WindowCell** cells, int maxCells, int count){
         cells[count] = NULL;
     }
     GRAPHICSCELLS_freeCells(cells, maxCells, count+1);
+}
+
+int GRAPHICSCELLS_getIndex(int row, int column, int max_columns){
+    return ((column)+(row)*(max_columns+1));
 }
 
 /***************************************************************************
@@ -92,7 +96,7 @@ GraphicCells* GRAPHICSCELLS_create(int rows, int columns){
 
     for(countRow=0; countRow <= rows; countRow++){
         for(countColumn=0; countColumn <= columns; countColumn++){
-            index = countColumn + countRow*columns;
+            index = countColumn + countRow*(columns+1);
 
             graphic->windowCell[index] = malloc(sizeof(WindowCell));
             if(!graphic->windowCell[index]){
@@ -162,7 +166,7 @@ int GRAPHICSCELLS_updateCell(GraphicCells** graphicCells, int row, int column, d
         int mark, int disable){
     if(!graphicCells || !(*graphicCells)) return 0;
 
-    int index = column + row*((*graphicCells)->columns);
+    int index = GRAPHICSCELLS_getIndex(row,column, (*graphicCells)->columns);
 
     wclear((*graphicCells)->windowCell[index]->cell);
 
@@ -192,4 +196,76 @@ int GRAPHICSCELLS_getBottomPosition(GraphicCells** graphicCells){
     if(!graphicCells || !(*graphicCells)) return 0;
 
     return (((*graphicCells)->rows+1)*CELLHEIGHT);
+}
+
+/**
+ * Permite ao usuário selecionar uma célula
+ * \param graphicCells Ponteiro para objeto GraphicCells
+ * \param cellRow Linha atual (e será preenchida com a linha da célula selecionada)
+ * \param cellColumn Coluna atual (e será preenchida com a coluna da célula selecionada)
+ */
+void GRAPHICSCELL_selectCell(GraphicCells** graphicCells, int *cellRow, int *cellColumn){
+    if(!graphicCells || !(*graphicCells)) return;
+
+    int index = GRAPHICSCELLS_getIndex(*cellRow, *cellColumn, (*graphicCells)->columns);
+
+    keypad(stdscr,TRUE);
+    cbreak();
+
+    int c = 0;
+
+    // enquanto não pressionar enter
+    while(c!=10){
+        int c = getch();
+
+        switch(c){
+        case KEY_UP:
+            box((*graphicCells)->windowCell[index]->cell, CELLLATERALBORDEROFF, CELLUPDOWNBORDEROFF);
+            wrefresh((*graphicCells)->windowCell[index]->cell);
+
+            if((*cellRow)==1) (*cellRow) = (*graphicCells)->rows;
+            else (*cellRow)--;
+
+            index = GRAPHICSCELLS_getIndex(*cellRow, *cellColumn, (*graphicCells)->columns);
+            box((*graphicCells)->windowCell[index]->cell, CELLLATERALBORDERON, CELLUPDOWNBORDERON);
+            wrefresh((*graphicCells)->windowCell[index]->cell);
+            break;
+        case KEY_DOWN:
+            box((*graphicCells)->windowCell[index]->cell, CELLLATERALBORDEROFF, CELLUPDOWNBORDEROFF);
+            wrefresh((*graphicCells)->windowCell[index]->cell);
+
+            if((*cellRow)==(*graphicCells)->rows) (*cellRow) = 1;
+            else (*cellRow)++;
+
+            index = GRAPHICSCELLS_getIndex(*cellRow, *cellColumn, (*graphicCells)->columns);
+            box((*graphicCells)->windowCell[index]->cell, CELLLATERALBORDERON, CELLUPDOWNBORDERON);
+            wrefresh((*graphicCells)->windowCell[index]->cell);
+            break;
+        case KEY_LEFT:
+            box((*graphicCells)->windowCell[index]->cell, CELLLATERALBORDEROFF, CELLUPDOWNBORDEROFF);
+            wrefresh((*graphicCells)->windowCell[index]->cell);
+
+            if((*cellColumn)==1) (*cellColumn) = (*graphicCells)->columns;
+            else (*cellColumn)--;
+
+            index = GRAPHICSCELLS_getIndex(*cellRow, *cellColumn, (*graphicCells)->columns);
+            box((*graphicCells)->windowCell[index]->cell, CELLLATERALBORDERON, CELLUPDOWNBORDERON);
+            wrefresh((*graphicCells)->windowCell[index]->cell);
+            break;
+        case KEY_RIGHT:
+            box((*graphicCells)->windowCell[index]->cell, CELLLATERALBORDEROFF, CELLUPDOWNBORDEROFF);
+            wrefresh((*graphicCells)->windowCell[index]->cell);
+
+            if((*cellColumn)==(*graphicCells)->columns) (*cellColumn) = 1;
+            else (*cellColumn)++;
+
+            index = GRAPHICSCELLS_getIndex(*cellRow, *cellColumn, (*graphicCells)->columns);
+            box((*graphicCells)->windowCell[index]->cell, CELLLATERALBORDERON, CELLUPDOWNBORDERON);
+            wrefresh((*graphicCells)->windowCell[index]->cell);
+            break;
+        case 10:
+            return;
+        }
+    }
+
 }

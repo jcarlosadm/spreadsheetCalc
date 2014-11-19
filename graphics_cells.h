@@ -73,4 +73,12 @@ int GRAPHICSCELLS_updateCell(GraphicCells** graphicCells, int row, int column, d
  */
 int GRAPHICSCELLS_getBottomPosition(GraphicCells** graphicCells);
 
+/**
+ * Permite ao usuário selecionar uma célula
+ * \param graphicCells Ponteiro para objeto GraphicCells
+ * \param cellRow Linha atual (e será preenchida com a linha da célula selecionada)
+ * \param cellColumn Coluna atual (e será preenchida com a coluna da célula selecionada)
+ */
+void GRAPHICSCELL_selectCell(GraphicCells** graphicCells, int *cellRow, int *cellColumn);
+
 #endif /* GRAPHICS_H_ */
