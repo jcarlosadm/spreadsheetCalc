@@ -5,6 +5,17 @@
 
 #include "graphics_instructions.h"
 
+// define o nome da janela
+#define WINDOWNAME "instructions"
+// define a posição x do nome da janela
+#define WINDOWNAMEX 2
+// define a posição y do nome da janela
+#define WINDOWNAMEY 0
+
+// define a borda lateral da janela
+#define WINDOWBORDERLATERAL '*'
+// define a borda superior e inferior da janela
+#define WINDOWBORDERUPDOWN '*'
 
 /*******************************************************************************
  * Estruturas
@@ -20,6 +31,16 @@ struct graphicInstructions{
 /*******************************************************************************
  * Funções privadas
  *******************************************************************************/
+
+/**
+ * Desenha borda em volta da janela
+ * \param graphic Ponteiro duplo para GraphicInstructions
+ */
+void GRAPHICINST_drawBox(GraphicInstructions** graphic){
+    box((*graphic)->instructionsWindow,WINDOWBORDERLATERAL,WINDOWBORDERUPDOWN);
+    mvwprintw((*graphic)->instructionsWindow,WINDOWNAMEY,WINDOWNAMEX,WINDOWNAME);
+    wrefresh((*graphic)->instructionsWindow);
+}
 
 /*******************************************************************************
  * Funções públicas
@@ -44,9 +65,7 @@ GraphicInstructions* GRAPHICINST_create(int positionX, int positionY,
         return NULL;
     }
 
-    box(graphic->instructionsWindow,'*','*');
-    mvwprintw(graphic->instructionsWindow,0,2,"instructions");
-    wrefresh(graphic->instructionsWindow);
+    GRAPHICINST_drawBox(&graphic);
 
     return graphic;
 }
@@ -75,9 +94,7 @@ void GRAPHICINST_clear(GraphicInstructions** graphic){
     if(!graphic || !(*graphic)) return;
 
     wclear((*graphic)->instructionsWindow);
-    box((*graphic)->instructionsWindow, '*', '*');
-    mvwprintw((*graphic)->instructionsWindow,0,2,"instructions");
-    wrefresh((*graphic)->instructionsWindow);
+    GRAPHICINST_drawBox(&(*graphic));
 }
 
 /**
