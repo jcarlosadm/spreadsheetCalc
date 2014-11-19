@@ -16,6 +16,20 @@
 #define CELLWIDTH 10
 #define CELLHEIGHT 3
 
+// borda lateral da célula "ligada"
+#define CELLLATERALBORDERON '*'
+// borda superior e inferior "desligada"
+#define CELLUPDOWNBORDERON '*'
+// borda lateral da célula "desligada"
+#define CELLLATERALBORDEROFF '|'
+// borda superior e inferior "desligada"
+#define CELLUPDOWNBORDEROFF '-'
+
+// equivalente a uma linha
+#define ROW 1
+// equivalente a uma coluna
+#define COLUMN 1
+
 /***************************************************************************
  * Estruturas
  ***************************************************************************/
@@ -76,8 +90,8 @@ GraphicCells* GRAPHICSCELLS_create(int rows, int columns){
     graphic->columns = columns;
     graphic->rows = rows;
 
-    for(countRow=0; countRow < rows+1; countRow++){
-        for(countColumn=0; countColumn<columns+1; countColumn++){
+    for(countRow=0; countRow <= rows; countRow++){
+        for(countColumn=0; countColumn <= columns; countColumn++){
             index = countColumn + countRow*columns;
 
             graphic->windowCell[index] = malloc(sizeof(WindowCell));
@@ -99,15 +113,16 @@ GraphicCells* GRAPHICSCELLS_create(int rows, int columns){
             }
             if(countRow != 0 && countColumn != 0){
                 if(countRow==1 && countColumn==1)
-                    box(graphic->windowCell[index]->cell, '*', '*');
+                    box(graphic->windowCell[index]->cell, CELLLATERALBORDERON, CELLUPDOWNBORDERON);
                 else
-                    box(graphic->windowCell[index]->cell, '|', '-');
+                    box(graphic->windowCell[index]->cell, CELLLATERALBORDEROFF, CELLUPDOWNBORDEROFF);
             }
             else{
                 if(countRow==0 && countColumn!=0)
-                    mvwprintw(graphic->windowCell[index]->cell, 1, 4, "%c", 64+countColumn);
+                    mvwprintw(graphic->windowCell[index]->cell, ROW*1, CELLWIDTH/2, "%c",
+                            64+countColumn);
                 else if(countRow!=0)
-                    mvwprintw(graphic->windowCell[index]->cell, 1, 4, "%d", countRow);
+                    mvwprintw(graphic->windowCell[index]->cell, ROW*1, CELLWIDTH/2, "%d", countRow);
             }
             wrefresh(graphic->windowCell[index]->cell);
         }
@@ -138,10 +153,10 @@ GraphicCells* GRAPHICSCELLS_free(GraphicCells* graphicCells){
  * \param row Linha da célula
  * \param column Coluna da célula
  * \param value Valor a ser colocado na célula
- * \param mark Informe 1 se deseja que a célula seja destacada, -1 se quer retirar o destaque,
- * 0 se quiser manter o estado atual, e 2 se deseja mudar o estado atual (de destaque para sem
- * destaque, ou o contrário)
- * \param disable 1 para que apareça uma célula vazia, 0 caso contrário
+ * \param mark Informe MARK_ON se deseja que a célula seja destacada, MARK_OFF se quer retirar
+ * o destaque, KEEP_MARK se quiser manter o estado atual, e CHANGE_MARK se deseja mudar o estado
+ * atual (de destaque para sem destaque, ou o contrário)
+ * \param disable informe DISABLE para que apareça uma célula vazia, e ENABLE caso contrário
  */
 int GRAPHICSCELLS_updateCell(GraphicCells** graphicCells, int row, int column, double value,
         int mark, int disable){
@@ -152,17 +167,17 @@ int GRAPHICSCELLS_updateCell(GraphicCells** graphicCells, int row, int column, d
     wclear((*graphicCells)->windowCell[index]->cell);
 
 
-    if(((*graphicCells)->windowCell[index]->status==ON && mark==0)
-            || (mark==1)
-            || (mark==2 && (*graphicCells)->windowCell[index]->status==OFF))
-        box((*graphicCells)->windowCell[index]->cell, '*', '*');
+    if(((*graphicCells)->windowCell[index]->status==ON && mark==KEEP_MARK)
+            || (mark==MARK_ON)
+            || (mark==CHANGE_MARK && (*graphicCells)->windowCell[index]->status==OFF))
+        box((*graphicCells)->windowCell[index]->cell, CELLLATERALBORDERON, CELLUPDOWNBORDERON);
     else
-        box((*graphicCells)->windowCell[index]->cell, '|', '-');
+        box((*graphicCells)->windowCell[index]->cell, CELLLATERALBORDEROFF, CELLUPDOWNBORDEROFF);
 
-    if(!disable)
-        mvwprintw((*graphicCells)->windowCell[index]->cell, 1, 2, "%.2f", value);
+    if(disable==ENABLE)
+        mvwprintw((*graphicCells)->windowCell[index]->cell, ROW*1, COLUMN*2, "%.2f", value);
     else
-        mvwprintw((*graphicCells)->windowCell[index]->cell, 1, 2, "");
+        mvwprintw((*graphicCells)->windowCell[index]->cell, ROW*1, COLUMN*2, "");
     wrefresh((*graphicCells)->windowCell[index]->cell);
 
     return 1;
