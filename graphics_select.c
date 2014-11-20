@@ -206,6 +206,7 @@ void GRAPHICSSELECT_clearOptions(GraphicSelect** graphic){
 void GRAPHICSSELECT_selectOption(GraphicSelect** graphic, char *optionName){
     if(!graphic || !(*graphic) || ((*graphic)->sentinel->next == (*graphic)->sentinel)) return;
 
+    // opção atual
     Option* currentOption = (*graphic)->sentinel->next;
 
     // posição x e y da subjanela de cada opção
@@ -218,14 +219,18 @@ void GRAPHICSSELECT_selectOption(GraphicSelect** graphic, char *optionName){
 
     // cria as subjanelas de opções
     while(currentOption!=(*graphic)->sentinel){
+        // a opção passou do limite da janela, colocar na próxima página
         if(optionPosY + OPTIONHEIGHT > (*graphic)->positionY + (*graphic)->height - 1){
             currentPage++;
             optionPosY = (*graphic)->positionY+1;
         }
 
+        // cria a janela
         currentOption->window = newwin(OPTIONHEIGHT,optionWidth,optionPosY,optionPosX);
+        // define sua página
         currentOption->page = currentPage;
 
+        // se a página é a primeira, mostra opção
         if(currentOption->page == 1){
             mvwprintw(currentOption->window,1,1,currentOption->name);
 
@@ -237,13 +242,17 @@ void GRAPHICSSELECT_selectOption(GraphicSelect** graphic, char *optionName){
             wrefresh(currentOption->window);
         }
 
+        // incrementa posição y da próxima opção
         optionPosY+=OPTIONHEIGHT;
 
+        // vai para a próxima opção
         currentOption = currentOption->next;
     }
 
+    // guarda última página
     int lastPage = currentPage;
-    // adiciona legenda de página
+
+    // adiciona legenda no rodapé da página
     mvwprintw((*graphic)->window,(*graphic)->height-1,
             (*graphic)->width/2,"page %d/%d",1,lastPage);
     wrefresh((*graphic)->window);
@@ -252,18 +261,25 @@ void GRAPHICSSELECT_selectOption(GraphicSelect** graphic, char *optionName){
     keypad(stdscr,TRUE);
     cbreak();
 
+    // variável de controle do pressionamento de tecla
     int keyPressed=0;
 
     currentOption = (*graphic)->sentinel->next;
+    // variável auxiliar
     Option* iterator = NULL;
 
+    // lista de opções da página atual
     Option *listCurrentPage = currentOption;
+    // lista de opções da página anterior
     Option *listOldPage = listCurrentPage;
 
+    // enquanto não pressionar ENTER...
     while(keyPressed!=10){
 
+        // se a lista de opções da página atual for diferente da página anterior...
         if(listCurrentPage != listOldPage){
 
+            // limpa opções anteriores
             iterator = listOldPage;
             while(iterator!=(*graphic)->sentinel &&
                     iterator->page==listOldPage->page){
@@ -273,6 +289,7 @@ void GRAPHICSSELECT_selectOption(GraphicSelect** graphic, char *optionName){
                 iterator = iterator->next;
             }
 
+            // escreve opções atuais
             iterator = listCurrentPage;
             while(iterator!=(*graphic)->sentinel &&
                     iterator->page == listCurrentPage->page){
@@ -285,12 +302,15 @@ void GRAPHICSSELECT_selectOption(GraphicSelect** graphic, char *optionName){
 
                 iterator = iterator->next;
             }
+
+            // lista anterior igual a atual
             listOldPage = listCurrentPage;
         }
 
         // recebe pressionamento de tecla
         keyPressed = getch();
 
+        // retira marcação da opção atual
         if(keyPressed!=10){
             box(currentOption->window,' ',' ');
             wrefresh(currentOption->window);
@@ -311,13 +331,16 @@ void GRAPHICSSELECT_selectOption(GraphicSelect** graphic, char *optionName){
             break;
         }
 
+        // muda a lista da página atual se a opção atual tiver página diferente
         if(currentOption->page != listCurrentPage->page){
             listCurrentPage = currentOption;
+            // faz a lista apontar para o início da lista
             while(listCurrentPage->previous != (*graphic)->sentinel &&
                   listCurrentPage->previous->page==currentOption->page)
                 listCurrentPage = listCurrentPage->previous;
         }
 
+        // marca opção atual, atualiza página
         if(keyPressed!=10){
             box(currentOption->window,OPTIONBORDERLATERAL,OPTIONBORDERUPDOWN);
             mvwprintw((*graphic)->window,(*graphic)->height-1,
@@ -327,6 +350,7 @@ void GRAPHICSSELECT_selectOption(GraphicSelect** graphic, char *optionName){
         }
     }
 
+    // guarda opção escolhida
     strcpy(optionName,currentOption->name);
 
     // libera subjanelas de opções
