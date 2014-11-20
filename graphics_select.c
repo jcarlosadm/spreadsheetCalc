@@ -219,6 +219,10 @@ void GRAPHICSSELECT_selectOption(GraphicSelect** graphic, char *optionName){
     while(currentOption!=(*graphic)->sentinel){
         currentOption->window = newwin(OPTIONHEIGHT,optionWidth,optionPosY,optionPosX);
         mvwprintw(currentOption->window,1,1,currentOption->name);
+
+        if(currentOption->previous == (*graphic)->sentinel)
+            box(currentOption->window,OPTIONBORDERLATERAL,OPTIONBORDERUPDOWN);
+
         wrefresh(currentOption->window);
         optionPosY+=OPTIONHEIGHT;
 
