@@ -24,8 +24,6 @@ typedef struct graphicSelect GraphicSelect;
  * \param positionY Posição y da janela
  * \param width Largura da janela (que será a largura de cada opção)
  * \param height Altura da janela (não de cada opção; as opções estarão contidas na janela).
- * Esse parâmetro determina a quantidade máxima de opções que a janela poderá ter (1 opção
- * para cada 3 unidades de altura).
  */
 GraphicSelect* GRAPHICSSELECT_create(int positionX, int positionY, int width, int height);
 
