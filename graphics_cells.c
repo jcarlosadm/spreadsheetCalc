@@ -186,7 +186,7 @@ GraphicCells* GRAPHICSCELLS_free(GraphicCells* graphicCells){
  * \param mark Informe MARK_ON se deseja que a célula seja destacada, MARK_OFF se quer retirar
  * o destaque, KEEP_MARK se quiser manter o estado atual, e CHANGE_MARK se deseja mudar o estado
  * atual (de destaque para sem destaque, ou o contrário)
- * \param disable informe DISABLE para que apareça uma célula vazia, e ENABLE caso contrário
+ * \param disable Se desabilita célula. booleano
  */
 int GRAPHICSCELLS_updateCell(GraphicCells** graphicCells, int row, int column, double value,
         int mark, int disable){
@@ -204,7 +204,7 @@ int GRAPHICSCELLS_updateCell(GraphicCells** graphicCells, int row, int column, d
     else
         GRAPHICSCELLS_drawBox(&((*graphicCells)->windowCell[index]),OFF);
 
-    if(disable==ENABLE)
+    if(!disable)
         mvwprintw((*graphicCells)->windowCell[index]->cell, ROW*1, COLUMN*2, "%.2f", value);
     else
         mvwprintw((*graphicCells)->windowCell[index]->cell, ROW*1, COLUMN*2, "");

@@ -55,9 +55,10 @@ void GRAPHICINST_write(GraphicInstructions** graphic, const char *instruction,
  * \param graphic Ponteiro duplo para GraphicInstructions
  * \param positionX Coordenada x em que aparecerá a instrução
  * \param positionY Coordenada y em que aparecerá a instrução
+ * \param leftRight Se aparece instruções direita e esquerda . booleano
  */
 void GRAPHICINST_writeKeyboard(GraphicInstructions** graphic, int positionX,
-        int positionY);
+        int positionY, int leftRight);
 
 /**
  * Recebe posição x da janela

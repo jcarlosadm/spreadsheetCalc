@@ -624,7 +624,7 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphi
     if(graphic && (*graphic))
         GRAPHICSCELLS_updateCell(&(*graphic), MATRIX_getRow(cellIndex, (*matrix)->columns),
                 MATRIX_getColumn(cellIndex,(*matrix)->columns),
-                (*matrix)->graph.cells[cellIndex]->value, KEEP_MARK, ENABLE);
+                (*matrix)->graph.cells[cellIndex]->value, KEEP_MARK, false);
 
     // libera pilha de árvore de expressão binária
     stackBin = STACKBINEXPTREE_free(stackBin);
@@ -826,7 +826,7 @@ int MATRIX_setExpression(Matrix** matrix, int row, int column, const char* expre
             && !(*matrix)->graph.cells[cellIndex]->first){
         free((*matrix)->graph.cells[cellIndex]);
         (*matrix)->graph.cells[cellIndex] = NULL;
-        GRAPHICSCELLS_updateCell(&(*graphic), row, column, 0, KEEP_MARK, DISABLE);
+        GRAPHICSCELLS_updateCell(&(*graphic), row, column, 0, KEEP_MARK, true);
         return 1;
     }
 
@@ -837,7 +837,7 @@ int MATRIX_setExpression(Matrix** matrix, int row, int column, const char* expre
 
     // se a célula não contém expressão, então é célula vazia
     if(strcmp((*matrix)->graph.cells[cellIndex]->expression, "")==0)
-        GRAPHICSCELLS_updateCell(&(*graphic), row, column, 0, KEEP_MARK, DISABLE);
+        GRAPHICSCELLS_updateCell(&(*graphic), row, column, 0, KEEP_MARK, true);
 
     // percorre todas as dependências para atualizar todas as células que dependem desta
     MATRIX_evalCellDepsValue(&(*matrix), cellIndex, cellIndex, &(*graphic));

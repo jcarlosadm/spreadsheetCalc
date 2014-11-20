@@ -22,15 +22,6 @@ enum mark{
 };
 
 /**
- * Enumerador de habilitação
- */
-enum enable{
-    ENABLE, ///< habilitar
-    DISABLE ///< desabilitar
-};
-
-
-/**
  * Estrutura do objeto que guarda dados relativos ao gráfico das células
  */
 typedef struct graphicCells GraphicCells;
@@ -63,7 +54,7 @@ GraphicCells* GRAPHICSCELLS_free(GraphicCells* graphicCells);
  * \param mark Informe MARK_ON se deseja que a célula seja destacada, MARK_OFF se quer retirar
  * o destaque, KEEP_MARK se quiser manter o estado atual, e CHANGE_MARK se deseja mudar o estado
  * atual (de destaque para sem destaque, ou o contrário)
- * \param disable informe DISABLE para que apareça uma célula vazia, e ENABLE caso contrário
+ * \param disable Se desabilita célula. booleano
  */
 int GRAPHICSCELLS_updateCell(GraphicCells** graphicCells, int row, int column, double value,
         int mark, int disable);

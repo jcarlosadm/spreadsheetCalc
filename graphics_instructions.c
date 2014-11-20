@@ -126,14 +126,22 @@ void GRAPHICINST_write(GraphicInstructions** graphic, const char *instruction,
  * \param graphic Ponteiro duplo para GraphicInstructions
  * \param positionX Coordenada x em que aparecerá a instrução
  * \param positionY Coordenada y em que aparecerá a instrução
+ * \param leftRight Se aparece instruções direita e esquerda . booleano
  */
 void GRAPHICINST_writeKeyboard(GraphicInstructions** graphic, int positionX,
-        int positionY){
+        int positionY, int leftRight){
     if(!graphic || !(*graphic)) return;
 
-    char keyboardString[] = "LEFT <-   RIGHT ->   UP ^   DOWN v     ENTER";
+    if(leftRight){
+        char keyboardString[] = "LEFT <-   RIGHT ->   UP ^   DOWN v     ENTER";
+        mvwprintw((*graphic)->instructionsWindow, positionY, positionX, "%s", keyboardString);
+    }
 
-    mvwprintw((*graphic)->instructionsWindow, positionY, positionX, "%s", keyboardString);
+    else {
+        char keyboardString[] = "UP ^   DOWN v     ENTER";
+        mvwprintw((*graphic)->instructionsWindow, positionY, positionX, "%s", keyboardString);
+    }
+
     wrefresh((*graphic)->instructionsWindow);
 }
 
