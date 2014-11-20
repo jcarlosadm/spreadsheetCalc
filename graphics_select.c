@@ -29,6 +29,8 @@ typedef struct option Option;
 struct option{
     char name[30];
     WINDOW* window;
+    int page;
+
     Option *next;
     Option *previous;
 };
@@ -146,10 +148,6 @@ GraphicSelect* GRAPHICSSELECT_free(GraphicSelect* graphic){
 int GRAPHICSSELECT_addOption(GraphicSelect** graphic, const char* optionName){
     if(!graphic || !(*graphic)) return 0;
 
-    // não há altura suficiente para adicionar mais uma opção
-    if(((*graphic)->height - 2 - ((*graphic)->totalOptions * OPTIONHEIGHT)) < OPTIONHEIGHT)
-        return 0;
-
     Option* oldLast = (*graphic)->sentinel->previous;
 
     oldLast->next = malloc(sizeof(Option));
@@ -215,21 +213,40 @@ void GRAPHICSSELECT_selectOption(GraphicSelect** graphic, char *optionName){
     // largura de cada opção
     int optionWidth = (*graphic)->width - 2;
 
+    // define a página atual
+    int currentPage=1;
+
     // cria as subjanelas de opções
     while(currentOption!=(*graphic)->sentinel){
+        if(optionPosY + OPTIONHEIGHT > (*graphic)->positionY + (*graphic)->height - 1){
+            currentPage++;
+            optionPosY = (*graphic)->positionY+1;
+        }
+
         currentOption->window = newwin(OPTIONHEIGHT,optionWidth,optionPosY,optionPosX);
-        mvwprintw(currentOption->window,1,1,currentOption->name);
+        currentOption->page = currentPage;
 
-        if(currentOption->previous == (*graphic)->sentinel)
-            box(currentOption->window,OPTIONBORDERLATERAL,OPTIONBORDERUPDOWN);
-        else
-            box(currentOption->window,' ',' ');
+        if(currentOption->page == 1){
+            mvwprintw(currentOption->window,1,1,currentOption->name);
 
-        wrefresh(currentOption->window);
+            if(currentOption->previous == (*graphic)->sentinel)
+                box(currentOption->window,OPTIONBORDERLATERAL,OPTIONBORDERUPDOWN);
+            else
+                box(currentOption->window,' ',' ');
+
+            wrefresh(currentOption->window);
+        }
+
         optionPosY+=OPTIONHEIGHT;
 
         currentOption = currentOption->next;
     }
+
+    int lastPage = currentPage;
+    // adiciona legenda de página
+    mvwprintw((*graphic)->window,(*graphic)->height-1,
+            (*graphic)->width/2,"page %d/%d",1,lastPage);
+    wrefresh((*graphic)->window);
 
     // habilita teclado
     keypad(stdscr,TRUE);
@@ -238,8 +255,39 @@ void GRAPHICSSELECT_selectOption(GraphicSelect** graphic, char *optionName){
     int keyPressed=0;
 
     currentOption = (*graphic)->sentinel->next;
+    Option* iterator = NULL;
+
+    Option *listCurrentPage = currentOption;
+    Option *listOldPage = listCurrentPage;
 
     while(keyPressed!=10){
+
+        if(listCurrentPage != listOldPage){
+
+            iterator = listOldPage;
+            while(iterator!=(*graphic)->sentinel &&
+                    iterator->page==listOldPage->page){
+                wclear(iterator->window);
+                wrefresh(iterator->window);
+
+                iterator = iterator->next;
+            }
+
+            iterator = listCurrentPage;
+            while(iterator!=(*graphic)->sentinel &&
+                    iterator->page == listCurrentPage->page){
+                mvwprintw(iterator->window, 1,1,iterator->name);
+                if(iterator == currentOption)
+                    box(iterator->window,OPTIONBORDERLATERAL,OPTIONBORDERUPDOWN);
+                else
+                    box(iterator->window,' ',' ');
+                wrefresh(iterator->window);
+
+                iterator = iterator->next;
+            }
+            listOldPage = listCurrentPage;
+        }
+
         // recebe pressionamento de tecla
         keyPressed = getch();
 
@@ -263,8 +311,18 @@ void GRAPHICSSELECT_selectOption(GraphicSelect** graphic, char *optionName){
             break;
         }
 
+        if(currentOption->page != listCurrentPage->page){
+            listCurrentPage = currentOption;
+            while(listCurrentPage->previous != (*graphic)->sentinel &&
+                  listCurrentPage->previous->page==currentOption->page)
+                listCurrentPage = listCurrentPage->previous;
+        }
+
         if(keyPressed!=10){
             box(currentOption->window,OPTIONBORDERLATERAL,OPTIONBORDERUPDOWN);
+            mvwprintw((*graphic)->window,(*graphic)->height-1,
+                    (*graphic)->width/2,"page %d/%d",listCurrentPage->page,lastPage);
+            wrefresh((*graphic)->window);
             wrefresh(currentOption->window);
         }
     }
