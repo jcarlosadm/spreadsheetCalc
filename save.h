@@ -42,9 +42,10 @@ SaveFile* SAVE_free(SaveFile* save);
  * \param window_list Ponteiro para a janela que listará espaços salvos até o momento
  * \param window_user Ponteiro para a janela que recebe texto digitado pelo usuário
  * \param window_select Ponteiro para a janela de opções
+ * \param matrix Ponteiro para a matriz de células
  */
 void SAVE_init(SaveFile** save, GraphicInstructions** window_instructions,
         GraphicInstructions** window_list, GraphicUser** window_user,
-        GraphicSelect** window_select);
+        GraphicSelect** window_select, Matrix** matrix);
 
 #endif /* SAVE_H_ */
