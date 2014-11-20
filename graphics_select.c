@@ -222,6 +222,8 @@ void GRAPHICSSELECT_selectOption(GraphicSelect** graphic, char *optionName){
 
         if(currentOption->previous == (*graphic)->sentinel)
             box(currentOption->window,OPTIONBORDERLATERAL,OPTIONBORDERUPDOWN);
+        else
+            box(currentOption->window,' ',' ');
 
         wrefresh(currentOption->window);
         optionPosY+=OPTIONHEIGHT;
@@ -234,6 +236,8 @@ void GRAPHICSSELECT_selectOption(GraphicSelect** graphic, char *optionName){
     cbreak();
 
     int keyPressed=0;
+
+    currentOption = (*graphic)->sentinel->next;
 
     while(keyPressed!=10){
         // recebe pressionamento de tecla
