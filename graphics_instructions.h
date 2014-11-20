@@ -59,4 +59,32 @@ void GRAPHICINST_write(GraphicInstructions** graphic, const char *instruction,
 void GRAPHICINST_writeKeyboard(GraphicInstructions** graphic, int positionX,
         int positionY);
 
+/**
+ * Recebe posição x da janela
+ * \return Posição x da janela
+ * \param graphic Ponteiro duplo para GraphicInstructions
+ */
+int GRAPHICINST_getPositionX(GraphicInstructions** graphic);
+
+/**
+ * Recebe posição y da janela
+ * \return Posição y da janela
+ * \param graphic Ponteiro duplo para GraphicInstructions
+ */
+int GRAPHICINST_getPositionY(GraphicInstructions** graphic);
+
+/**
+ * Recebe largura da janela
+ * \return Largura da janela
+ * \param graphic Ponteiro duplo para GraphicInstructions
+ */
+int GRAPHICINST_getWidth(GraphicInstructions** graphic);
+
+/**
+ * Recebe altura da janela
+ * \return Altura da janela
+ * \param graphic Ponteiro duplo para GraphicInstructions
+ */
+int GRAPHICINST_getHeight(GraphicInstructions** graphic);
+
 #endif /* GRAPHICS_INSTRUCTIONS_H_ */

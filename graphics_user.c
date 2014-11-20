@@ -25,6 +25,10 @@
  * Estrutura da janela de usuário
  */
 struct graphicUser{
+    int positionX;
+    int positionY;
+    int width;
+    int height;
     WINDOW* userWindow;
 };
 
@@ -57,6 +61,11 @@ void GRAPHICUSER_drawBox(GraphicUser** graphic){
 GraphicUser* GRAPHICUSER_create(int positionX, int positionY, int width, int height){
     GraphicUser* graphic = malloc(sizeof(GraphicUser));
     if(!graphic) return NULL;
+
+    graphic->positionX = positionX;
+    graphic->positionY = positionY;
+    graphic->width = width;
+    graphic->height = height;
 
     graphic->userWindow = newwin(height, width, positionY, positionX);
     if(!graphic->userWindow){
@@ -121,4 +130,40 @@ void GRAPHICUSER_get(GraphicUser** graphic, char* text, int positionX, int posit
     if(!graphic || !(*graphic)) return;
 
     mvwgetnstr((*graphic)->userWindow,positionY, positionX, text, 60);
+}
+
+/**
+ * Obtem posição x da janela
+ * \return Posição x da janela
+ * \param graphic Ponteiro duplo para GraphicUser
+ */
+int GRAPHICUSER_getPositionX(GraphicUser** graphic){
+    return (*graphic)->positionX;
+}
+
+/**
+ * Obtem posição y da janela
+ * \return Posição y da janela
+ * \param graphic Ponteiro duplo para GraphicUser
+ */
+int GRAPHICUSER_getPositionY(GraphicUser** graphic){
+    return (*graphic)->positionY;
+}
+
+/**
+ * Obtem largura da janela
+ * \return Largura da janela
+ * \param graphic Ponteiro duplo para GraphicUser
+ */
+int GRAPHICUSER_getWidth(GraphicUser** graphic){
+    return (*graphic)->width;
+}
+
+/**
+ * Obtem altura da janela
+ * \return Altura da janela
+ * \param graphic Ponteiro duplo para GraphicUser
+ */
+int GRAPHICUSER_getHeight(GraphicUser** graphic){
+    return (*graphic)->height;
 }

@@ -25,6 +25,10 @@
  * Estrutura da janela de isntruções
  */
 struct graphicInstructions{
+    int positionX;
+    int positionY;
+    int width;
+    int height;
     WINDOW* instructionsWindow;
 };
 
@@ -58,6 +62,11 @@ GraphicInstructions* GRAPHICINST_create(int positionX, int positionY,
         int width,int height){
     GraphicInstructions* graphic = malloc(sizeof(GraphicInstructions));
     if(!graphic) return NULL;
+
+    graphic->positionX = positionX;
+    graphic->positionY = positionY;
+    graphic->width = width;
+    graphic->height = height;
 
     graphic->instructionsWindow = newwin(height, width, positionY, positionX);
     if(!graphic->instructionsWindow){
@@ -128,3 +137,38 @@ void GRAPHICINST_writeKeyboard(GraphicInstructions** graphic, int positionX,
     wrefresh((*graphic)->instructionsWindow);
 }
 
+/**
+ * Recebe posição x da janela
+ * \return Posição x da janela
+ * \param graphic Ponteiro duplo para GraphicInstructions
+ */
+int GRAPHICINST_getPositionX(GraphicInstructions** graphic){
+    return (*graphic)->positionX;
+}
+
+/**
+ * Recebe posição y da janela
+ * \return Posição y da janela
+ * \param graphic Ponteiro duplo para GraphicInstructions
+ */
+int GRAPHICINST_getPositionY(GraphicInstructions** graphic){
+    return (*graphic)->positionY;
+}
+
+/**
+ * Recebe largura da janela
+ * \return Largura da janela
+ * \param graphic Ponteiro duplo para GraphicInstructions
+ */
+int GRAPHICINST_getWidth(GraphicInstructions** graphic){
+    return (*graphic)->width;
+}
+
+/**
+ * Recebe altura da janela
+ * \return Altura da janela
+ * \param graphic Ponteiro duplo para GraphicInstructions
+ */
+int GRAPHICINST_getHeight(GraphicInstructions** graphic){
+    return (*graphic)->height;
+}

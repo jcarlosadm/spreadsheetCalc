@@ -50,11 +50,39 @@ void GRAPHICUSER_write(GraphicUser** graphic, const char *text, int positionX, i
 
 /**
  * Recebe entrada do usuário, guardando o resultado em text
- * \param graphic Ponteiro duplo para GraphicUSer (a janela de usuário)
+ * \param graphic Ponteiro duplo para GraphicUser (a janela de usuário)
  * \param text Variável a ser preenchida com a entrada do usuário (máximo 60 caracteres)
  * \param positionX Coordenada x da entrada do usuário
  * \param positionY Coordenada y da entrada do usuário
  */
 void GRAPHICUSER_get(GraphicUser** graphic, char* text, int positionX, int positionY);
+
+/**
+ * Obtem posição x da janela
+ * \return Posição x da janela
+ * \param graphic Ponteiro duplo para GraphicUser
+ */
+int GRAPHICUSER_getPositionX(GraphicUser** graphic);
+
+/**
+ * Obtem posição y da janela
+ * \return Posição y da janela
+ * \param graphic Ponteiro duplo para GraphicUser
+ */
+int GRAPHICUSER_getPositionY(GraphicUser** graphic);
+
+/**
+ * Obtem largura da janela
+ * \return Largura da janela
+ * \param graphic Ponteiro duplo para GraphicUser
+ */
+int GRAPHICUSER_getWidth(GraphicUser** graphic);
+
+/**
+ * Obtem altura da janela
+ * \return Altura da janela
+ * \param graphic Ponteiro duplo para GraphicUser
+ */
+int GRAPHICUSER_getHeight(GraphicUser** graphic);
 
 #endif /* GRAPHICS_USER_H_ */
