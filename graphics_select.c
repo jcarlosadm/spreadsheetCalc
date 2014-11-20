@@ -28,7 +28,9 @@
 typedef struct option Option;
 struct option{
     char name[30];
+    WINDOW* window;
     Option *next;
+    Option *previous;
 };
 
 /**
@@ -43,7 +45,7 @@ struct graphicSelect{
     WINDOW* window;
 
     int totalOptions;
-    Option* firstOption;
+    Option* sentinel;
 };
 
 /************************************************************************************
@@ -53,13 +55,13 @@ struct graphicSelect{
 /**
  * Libera opções
  */
-void GRAPHICSSELECT_freeOptions(Option** option){
-    if(!option || !(*option)) return;
+void GRAPHICSSELECT_freeOptions(Option** option, Option** sentinel){
+    if(!option || !(*option) || ((*option)==(*sentinel))) return;
 
     Option* current = (*option);
     (*option) = (*option)->next;
     free(current);
-    GRAPHICSSELECT_freeOptions(&(*option));
+    GRAPHICSSELECT_freeOptions(&(*option),&(*sentinel));
 }
 
 /**
@@ -97,7 +99,16 @@ GraphicSelect* GRAPHICSSELECT_create(int positionX, int positionY, int width, in
         return NULL;
     }
 
-    graphic->firstOption = NULL;
+    graphic->sentinel = malloc(sizeof(Option));
+    if(!graphic->sentinel){
+        delwin(graphic->window);
+        free(graphic);
+        return NULL;
+    }
+
+    graphic->sentinel->next = graphic->sentinel;
+    graphic->sentinel->previous = graphic->sentinel;
+
     graphic->positionX = positionX;
     graphic->positionY = positionY;
     graphic->width = width;
@@ -117,7 +128,9 @@ GraphicSelect* GRAPHICSSELECT_create(int positionX, int positionY, int width, in
 GraphicSelect* GRAPHICSSELECT_free(GraphicSelect* graphic){
     if(!graphic) return NULL;
 
-    GRAPHICSSELECT_freeOptions(&(graphic->firstOption));
+    GRAPHICSSELECT_freeOptions(&(graphic->sentinel->next),&(graphic->sentinel));
+    free(graphic->sentinel);
+
     delwin(graphic->window);
     free(graphic);
 
@@ -134,26 +147,23 @@ int GRAPHICSSELECT_addOption(GraphicSelect** graphic, const char* optionName){
     if(!graphic || !(*graphic)) return 0;
 
     // não há altura suficiente para adicionar mais uma opção
-    if(((*graphic)->height - ((*graphic)->totalOptions * OPTIONHEIGHT)) < OPTIONHEIGHT)
+    if(((*graphic)->height - 2 - ((*graphic)->totalOptions * OPTIONHEIGHT)) < OPTIONHEIGHT)
         return 0;
 
-    if((*graphic)->firstOption){
-        Option* current = (*graphic)->firstOption;
-        while(current->next)
-            current = current->next;
-        current->next = malloc(sizeof(Option));
-        if(!(current->next)) return 0;
+    Option* oldLast = (*graphic)->sentinel->previous;
 
-        current->next->next = NULL;
-        strcpy(current->next->name, optionName);
+    oldLast->next = malloc(sizeof(Option));
+    if(!(oldLast->next)) {
+        oldLast->next = (*graphic)->sentinel;
+        return 0;
     }
-    else{
-        (*graphic)->firstOption = malloc(sizeof(Option));
-        if(!(*graphic)->firstOption) return 0;
 
-        (*graphic)->firstOption->next = NULL;
-        strcpy((*graphic)->firstOption->name, optionName);
-    }
+    oldLast->next->next = (*graphic)->sentinel;
+    oldLast->next->previous = oldLast;
+    strcpy(oldLast->next->name, optionName);
+    oldLast->next->window = NULL;
+
+    (*graphic)->sentinel->previous = oldLast->next;
 
     ((*graphic)->totalOptions)++;
 
@@ -165,22 +175,14 @@ int GRAPHICSSELECT_addOption(GraphicSelect** graphic, const char* optionName){
  * \param graphic Ponteiro duplo para GraphicSelect
  */
 void GRAPHICSSELECT_removeOption(GraphicSelect** graphic){
-    if(!graphic || !(*graphic) || !(*graphic)->firstOption) return;
+    if(!graphic || !(*graphic) || ((*graphic)->sentinel->previous == (*graphic)->sentinel)) return;
 
-    if(!(*graphic)->firstOption->next){
-        free((*graphic)->firstOption);
-        (*graphic)->firstOption = NULL;
-        ((*graphic)->totalOptions)--;
-        return;
-    }
+    Option* oldLast = (*graphic)->sentinel->previous;
 
-    Option* current = (*graphic)->firstOption;
+    oldLast->previous->next = oldLast->next;
+    oldLast->next->previous = oldLast->previous;
 
-    while(current->next->next)
-        current = current->next;
-
-    free(current->next);
-    current->next = NULL;
+    free(oldLast);
     ((*graphic)->totalOptions)--;
 }
 
@@ -189,9 +191,87 @@ void GRAPHICSSELECT_removeOption(GraphicSelect** graphic){
  * \param graphic Ponteiro duplo para GraphicSelect
  */
 void GRAPHICSSELECT_clearOptions(GraphicSelect** graphic){
-    if(!graphic || !(*graphic) || !(*graphic)->firstOption) return;
+    if(!graphic || !(*graphic) || ((*graphic)->sentinel->next == (*graphic)->sentinel)) return;
 
-    GRAPHICSSELECT_freeOptions(&((*graphic)->firstOption));
-    (*graphic)->firstOption = NULL;
+    GRAPHICSSELECT_freeOptions(&(*graphic)->sentinel->next, &(*graphic)->sentinel);
+    (*graphic)->sentinel->next = (*graphic)->sentinel;
+    (*graphic)->sentinel->previous = (*graphic)->sentinel;
+
     (*graphic)->totalOptions = 0;
+}
+
+/**
+ * Abre opções e o usuário poderá escolher com ENTER.
+ * \param graphic Ponteiro duplo para GraphicSelect
+ * \param optionName Variável a ser preenchida com o nome da opção escolhida
+ */
+void GRAPHICSSELECT_selectOption(GraphicSelect** graphic, char *optionName){
+    if(!graphic || !(*graphic) || ((*graphic)->sentinel->next == (*graphic)->sentinel)) return;
+
+    Option* currentOption = (*graphic)->sentinel->next;
+
+    // posição x e y da subjanela de cada opção
+    int optionPosX=(*graphic)->positionX+1, optionPosY=(*graphic)->positionY +1;
+    // largura de cada opção
+    int optionWidth = (*graphic)->width - 2;
+
+    // cria as subjanelas de opções
+    while(currentOption!=(*graphic)->sentinel){
+        currentOption->window = newwin(OPTIONHEIGHT,optionWidth,optionPosY,optionPosX);
+        mvwprintw(currentOption->window,1,1,currentOption->name);
+        wrefresh(currentOption->window);
+        optionPosY+=OPTIONHEIGHT;
+
+        currentOption = currentOption->next;
+    }
+
+    // habilita teclado
+    keypad(stdscr,TRUE);
+    cbreak();
+
+    int keyPressed=0;
+
+    while(keyPressed!=10){
+        // recebe pressionamento de tecla
+        keyPressed = getch();
+
+        if(keyPressed!=10){
+            box(currentOption->window,' ',' ');
+            wrefresh(currentOption->window);
+        }
+
+        switch(keyPressed){
+        case KEY_UP:
+            if(currentOption->previous == (*graphic)->sentinel)
+                currentOption = (*graphic)->sentinel->previous;
+            else
+                currentOption = currentOption->previous;
+            break;
+        case KEY_DOWN:
+            if(currentOption->next == (*graphic)->sentinel)
+                currentOption = (*graphic)->sentinel->next;
+            else
+                currentOption = currentOption->next;
+            break;
+        }
+
+        if(keyPressed!=10){
+            box(currentOption->window,OPTIONBORDERLATERAL,OPTIONBORDERUPDOWN);
+            wrefresh(currentOption->window);
+        }
+    }
+
+    strcpy(optionName,currentOption->name);
+
+    // libera subjanelas de opções
+    currentOption = (*graphic)->sentinel->next;
+    while(currentOption != (*graphic)->sentinel){
+        delwin(currentOption->window);
+        currentOption->window = NULL;
+
+        currentOption = currentOption->next;
+    }
+
+    // atualiza janela de opções
+    GRAPHICSSELECT_drawBoxWindow(&(*graphic));
 }

@@ -267,54 +267,42 @@ void GRAPHICSCELL_selectCell(GraphicCells** graphicCells, int *cellRow, int *cel
     keypad(stdscr,TRUE);
     cbreak();
 
-    int c = 0;
+    int keyPressed = 0;
 
     // enquanto não pressionar enter
-    while(c!=10){
+    while(keyPressed!=10){
         // recebe pressionamento de tecla
-        int c = getch();
+        keyPressed = getch();
+
+        if(keyPressed!=10)
+            GRAPHICSCELLS_drawBox(&((*graphicCells)->windowCell[index]),OFF);
 
         // faz algo de acordo com a tecla pressionada
-        switch(c){
+        switch(keyPressed){
         case KEY_UP:
-            GRAPHICSCELLS_drawBox(&((*graphicCells)->windowCell[index]),OFF);
-
             if((*cellRow)==1) (*cellRow) = (*graphicCells)->rows;
             else (*cellRow)--;
-
             index = GRAPHICSCELLS_getIndex(*cellRow, *cellColumn, (*graphicCells)->columns);
-            GRAPHICSCELLS_drawBox(&((*graphicCells)->windowCell[index]),ON);
             break;
         case KEY_DOWN:
-            GRAPHICSCELLS_drawBox(&((*graphicCells)->windowCell[index]),OFF);
-
             if((*cellRow)==(*graphicCells)->rows) (*cellRow) = 1;
             else (*cellRow)++;
-
             index = GRAPHICSCELLS_getIndex(*cellRow, *cellColumn, (*graphicCells)->columns);
-            GRAPHICSCELLS_drawBox(&((*graphicCells)->windowCell[index]),ON);
             break;
         case KEY_LEFT:
-            GRAPHICSCELLS_drawBox(&((*graphicCells)->windowCell[index]),OFF);
-
             if((*cellColumn)==1) (*cellColumn) = (*graphicCells)->columns;
             else (*cellColumn)--;
-
             index = GRAPHICSCELLS_getIndex(*cellRow, *cellColumn, (*graphicCells)->columns);
-            GRAPHICSCELLS_drawBox(&((*graphicCells)->windowCell[index]),ON);
             break;
         case KEY_RIGHT:
-            GRAPHICSCELLS_drawBox(&((*graphicCells)->windowCell[index]),OFF);
-
             if((*cellColumn)==(*graphicCells)->columns) (*cellColumn) = 1;
             else (*cellColumn)++;
-
             index = GRAPHICSCELLS_getIndex(*cellRow, *cellColumn, (*graphicCells)->columns);
-            GRAPHICSCELLS_drawBox(&((*graphicCells)->windowCell[index]),ON);
             break;
-        case 10:
-            return;
         }
+
+        if(keyPressed!=10)
+            GRAPHICSCELLS_drawBox(&((*graphicCells)->windowCell[index]),ON);
     }
 
 }
