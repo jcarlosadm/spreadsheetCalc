@@ -1286,6 +1286,11 @@ int MATRIX_checkCyclicDependency(int row, int column, const char* expression, Ma
                         cellDestiny = MATRIX_evalCellIndex(countRow, countColumn,
                                 (*matrix)->columns);
 
+                        // se a célula destino for a própria célula, erro
+                        if(cellIndex == cellDestiny){
+                            return 1;
+                        }
+
                         // percorre dependências da célula
                         cellDependency = (*matrix)->graph.cells[cellIndex]->first;
                         while(cellDependency){
@@ -1315,6 +1320,11 @@ int MATRIX_checkCyclicDependency(int row, int column, const char* expression, Ma
             // pega índice da célula no grafo
             cellDestiny = MATRIX_getCellIndex_fromReference(expression, &count,
                     (*matrix)->columns);
+
+            // se a célula destino for a própria célula, erro
+            if(cellIndex == cellDestiny){
+                return 1;
+            }
 
             // percorre dependências da célula
             cellDependency = (*matrix)->graph.cells[cellIndex]->first;
