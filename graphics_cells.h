@@ -39,10 +39,12 @@ typedef struct graphicCells GraphicCells;
  * Aloca memória para objeto GraphicCells, adiciona células de acordo com
  * a quantidade de linhas e colunas informadas, e desenha na tela
  * \return Ponteiro para GraphicCells, ou NULL em caso de falha de alocação
+ * \param positionX Posição x da janela
+ * \param positionY Posição y da janela
  * \param rows Quantidade de linhas
  * \param columns Quantidade de colunas
  */
-GraphicCells* GRAPHICSCELLS_create(int rows, int columns);
+GraphicCells* GRAPHICSCELLS_create(int positionX, int positionY, int rows, int columns);
 
 /**
  * Desaloca memória de objeto graphicCells
@@ -67,11 +69,32 @@ int GRAPHICSCELLS_updateCell(GraphicCells** graphicCells, int row, int column, d
         int mark, int disable);
 
 /**
- * Pega posição da borda inferior do conjunto inteiro de células
- * \return Posição da borda inferior do conjunto de células
+ * Pega altura da janela
+ * \return Altura da janela
  * \param graphicCells Ponteiro para objeto GraphicCells
  */
-int GRAPHICSCELLS_getBottomPosition(GraphicCells** graphicCells);
+int GRAPHICSCELLS_getHeight(GraphicCells** graphicCells);
+
+/**
+ * Pega largura da janela de células
+ * \return Largura da janela
+ * \param graphicCells Ponteiro para objeto GraphicCells
+ */
+int GRAPHICSCELLS_getWidth(GraphicCells** graphicCells);
+
+/**
+ * Pega posição x da janela
+ * \return Posição x da janela
+ * \param graphicCells Ponteiro para objeto GraphicCells
+ */
+int GRAPHICSCELLS_getPositionX(GraphicCells** graphicCells);
+
+/**
+ * Pega posição y da janela
+ * \return Posição y da janela
+ * \param graphicCells Ponteiro para objeto GraphicCells
+ */
+int GRAPHICSCELLS_getPositionY(GraphicCells** graphicCells);
 
 /**
  * Permite ao usuário selecionar uma célula

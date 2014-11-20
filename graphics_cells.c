@@ -47,6 +47,8 @@ struct windowCell{
  * Estrutura do objeto que guarda dados relativos ao gráfico das células
  */
 struct graphicCells{
+    int positionX;
+    int positionY;
     int rows;
     int columns;
     WindowCell *windowCell[MAX_CELLS];
@@ -101,16 +103,20 @@ void GRAPHICSCELLS_drawBox(WindowCell** cell, int status){
  * Aloca memória para objeto GraphicCells, adiciona células de acordo com
  * a quantidade de linhas e colunas informadas, e desenha na tela
  * \return Ponteiro para GraphicCells, ou NULL em caso de falha de alocação
+ * \param positionX Posição x da janela
+ * \param positionY Posição y da janela
  * \param rows Quantidade de linhas
  * \param columns Quantidade de colunas
  */
-GraphicCells* GRAPHICSCELLS_create(int rows, int columns){
+GraphicCells* GRAPHICSCELLS_create(int positionX, int positionY, int rows, int columns){
     GraphicCells* graphic = malloc(sizeof(GraphicCells));
     if(!graphic) return NULL;
 
     int index;
     int countRow, countColumn;
 
+    graphic->positionX = positionX;
+    graphic->positionY = positionY;
     graphic->columns = columns;
     graphic->rows = rows;
 
@@ -130,7 +136,7 @@ GraphicCells* GRAPHICSCELLS_create(int rows, int columns){
                 graphic->windowCell[index]->status = OFF;
 
             graphic->windowCell[index]->cell = newwin(CELLHEIGHT, CELLWIDTH,
-                    countRow*CELLHEIGHT, countColumn*CELLWIDTH);
+                    countRow*CELLHEIGHT+positionY, countColumn*CELLWIDTH+positionX);
             if(!graphic->windowCell[index]->cell){
                 graphic = GRAPHICSCELLS_free(graphic);
                 return NULL;
@@ -208,14 +214,42 @@ int GRAPHICSCELLS_updateCell(GraphicCells** graphicCells, int row, int column, d
 }
 
 /**
- * Pega posição da borda inferior do conjunto inteiro de células
- * \return Posição da borda inferior do conjunto de células
+ * Pega altura da janela
+ * \return Altura da janela
  * \param graphicCells Ponteiro para objeto GraphicCells
  */
-int GRAPHICSCELLS_getBottomPosition(GraphicCells** graphicCells){
+int GRAPHICSCELLS_getHeight(GraphicCells** graphicCells){
     if(!graphicCells || !(*graphicCells)) return 0;
 
     return (((*graphicCells)->rows+1)*CELLHEIGHT);
+}
+
+/**
+ * Pega largura da janela de células
+ * \return Largura da janela
+ * \param graphicCells Ponteiro para objeto GraphicCells
+ */
+int GRAPHICSCELLS_getWidth(GraphicCells** graphicCells){
+
+    return (((*graphicCells)->columns+1)*CELLWIDTH);
+}
+
+/**
+ * Pega posição x da janela
+ * \return Posição x da janela
+ * \param graphicCells Ponteiro para objeto GraphicCells
+ */
+int GRAPHICSCELLS_getPositionX(GraphicCells** graphicCells){
+    return (*graphicCells)->positionX;
+}
+
+/**
+ * Pega posição y da janela
+ * \return Posição y da janela
+ * \param graphicCells Ponteiro para objeto GraphicCells
+ */
+int GRAPHICSCELLS_getPositionY(GraphicCells** graphicCells){
+    return (*graphicCells)->positionY;
 }
 
 /**
