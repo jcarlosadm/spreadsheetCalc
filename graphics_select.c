@@ -279,3 +279,39 @@ void GRAPHICSSELECT_selectOption(GraphicSelect** graphic, char *optionName){
     // atualiza janela de opções
     GRAPHICSSELECT_drawBoxWindow(&(*graphic));
 }
+
+/**
+ * Pega posição x da janela
+ * \return Posição x da janela
+ * \param graphic Ponteiro para GraphicSelect
+ */
+int GRAPHICSSELECT_getPositionX(GraphicSelect** graphic){
+    return (*graphic)->positionX;
+}
+
+/**
+ * Pega posição y da janela
+ * \return Posição y da janela
+ * \param graphic Ponteiro para GraphicSelect
+ */
+int GRAPHICSSELECT_getPositionY(GraphicSelect** graphic){
+    return (*graphic)->positionY;
+}
+
+/**
+ * Pega largura da janela
+ * \return Largura da janela
+ * \param graphic Ponteiro para GraphicSelect
+ */
+int GRAPHICSSELECT_getWidth(GraphicSelect** graphic){
+    return (*graphic)->width;
+}
+
+/**
+ * Pega altura da janela
+ * \return Altura da janela
+ * \param graphic Ponteiro para GraphicSelect
+ */
+int GRAPHICSSELECT_getHeight(GraphicSelect** graphic){
+    return (*graphic)->height;
+}
