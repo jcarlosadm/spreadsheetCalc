@@ -17,6 +17,7 @@
  */
 struct saveFile{
     mxml_node_t* tree;
+    mxml_node_t* firstNode;
 };
 
 /******************************************************************************
@@ -49,20 +50,38 @@ SaveFile* SAVE_create(const char *fileName){
             free(save);
             return NULL;
         }
+
+        save->firstNode = mxmlNewElement(save->tree,MAIN_NODE);
     }
     // se conseguir abrir o arquivo
     else{
         save->tree = mxmlLoadFile(NULL, file, MXML_TEXT_CALLBACK);
+        fclose(file);
+
         if(!save->tree){
-            fclose(file);
             free(save);
             return NULL;
         }
-        fclose(file);
+
+        save->firstNode = mxmlWalkNext(save->tree, save->tree, MXML_DESCEND);
     }
 
-    save->tree = mxmlNewElement(save->tree,MAIN_NODE);
-
     return save;
+}
 
+/**
+ * Libera memória alocada no objeto SaveFile
+ * \return NULL
+ * \param save Ponteiro para SaveFile
+ */
+SaveFile* SAVE_free(SaveFile* save){
+    if(!save) return save;
+
+    mxmlDelete(save->tree);
+    save->firstNode = NULL;
+    save->tree = NULL;
+
+    free(save);
+
+    return NULL;
 }
