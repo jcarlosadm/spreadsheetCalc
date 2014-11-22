@@ -239,3 +239,14 @@ void SAVE_defineWorkspace(SaveFile** save, GraphicInstructions** window_instruct
     GRAPHICINST_clear(&(*window_list));
     GRAPHICUSER_clear(&(*window_user));
 }
+
+/**
+ * Verifica se o espaço de trabalho ainda não foi definido
+ * \return 1 caso ainda não tenha sido. 0 caso contrário
+ * \param save Ponteiro para SaveFile
+ */
+int SAVE_workspaceIsNULL(SaveFile** save){
+    if(!save || !(*save)) return 0;
+
+    return (strcmp((*save)->workspace, "")==0);
+}
