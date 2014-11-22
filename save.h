@@ -57,7 +57,7 @@ void SAVE_defineWorkspace(SaveFile** save, GraphicInstructions** window_instruct
 
 /**
  * Verifica se o espaço de trabalho ainda não foi definido
- * \return 1 caso ainda não tenha sido. 0 caso contrário
+ * \return Um valor diferente de 0 caso ainda não tenha sido. 0 caso contrário
  * \param save Ponteiro para SaveFile
  */
 int SAVE_workspaceIsNULL(SaveFile** save);
