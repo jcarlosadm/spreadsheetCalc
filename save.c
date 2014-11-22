@@ -211,7 +211,7 @@ void SAVE_defineWorkspace(SaveFile** save, GraphicInstructions** window_instruct
 
             // verifica qual opção escolhida
             //sim
-            if(strcmp(option,YES)){
+            if(strcmp(option,YES)==0){
                 strcpy((*save)->workspace, workspaceTempName);
 
                 GRAPHICINST_clear(&(*window_instructions));
