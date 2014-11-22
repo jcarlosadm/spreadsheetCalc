@@ -10,7 +10,7 @@
 
 // Define nome das opções SIM e NÂO
 #define YES "Sim"
-#define NO "No"
+#define NO "Nao"
 
 /******************************************************************************
  * Estruturas
