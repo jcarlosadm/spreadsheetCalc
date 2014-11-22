@@ -12,6 +12,10 @@
 #define YES "Sim"
 #define NO "Nao"
 
+// define comprimento da linha e coluna
+#define ROW 1
+#define COLUMN 1
+
 /******************************************************************************
  * Estruturas
  ******************************************************************************/
@@ -46,20 +50,20 @@ void SAVE_listWorkSpaces(SaveFile** save,GraphicInstructions** windowList){
     mxml_node_t* node =  mxmlWalkNext((*save)->firstNode, (*save)->tree, MXML_DESCEND);
 
     // guarda posição y para imprimir na tela de listagem (posição inicial 3)
-    int positionY = 3;
+    int positionY = ROW*3;
     // guarda posição y da borda inferior da tela de listagem
     int limitWindowList = GRAPHICINST_getPositionY(&(*windowList))
             + GRAPHICINST_getHeight(&(*windowList));
 
     // imforma título
-    GRAPHICINST_write(&(*windowList),"espacos de trabalho atualmente salvos",1,1);
+    GRAPHICINST_write(&(*windowList),"espacos de trabalho atualmente salvos",COLUMN*1,ROW*1);
 
     // enquanto node não nulo e não atingiu o limite da tela, imprime
-    while(node && positionY <= limitWindowList - 3){
-        GRAPHICINST_write(&(*windowList),mxmlGetElement(node),1,positionY);
-        GRAPHICINST_write(&(*windowList),mxmlElementGetAttr(node,"date"),3,positionY+1);
+    while(node && positionY <= limitWindowList - ROW*3){
+        GRAPHICINST_write(&(*windowList),mxmlGetElement(node),COLUMN*1,positionY);
+        GRAPHICINST_write(&(*windowList),mxmlElementGetAttr(node,"date"),COLUMN*3,positionY+ROW*1);
 
-        positionY+=2;
+        positionY+=ROW*2;
         node = mxmlGetNextSibling(node);
     }
 }
@@ -178,8 +182,9 @@ void SAVE_defineWorkspace(SaveFile** save, GraphicInstructions** window_instruct
 
     // guardará o nome do espaço de trabalho
     char workspaceTempName[60];
-    // guardará decisão quanto a sobrescrever
-    int noRewrite=1;
+
+    // variável que controla loop da decisão de reescrita do usuário
+    int continueLoop = true;
 
     // limpa opções e adiciona SIM e NÃO
     GRAPHICSSELECT_clearOptions(&(*window_select));
@@ -189,22 +194,23 @@ void SAVE_defineWorkspace(SaveFile** save, GraphicInstructions** window_instruct
     char option[10];
 
     // enquanto não sobrescreve...
-    while(noRewrite){
+    while(continueLoop){
 
         // pede para o usuário digitar um nome para o espaço de trabalho que quer salvar
         GRAPHICINST_clear(&(*window_instructions));
         GRAPHICINST_write(&(*window_instructions),
-                "Digite o nome do espaco de trabalho que deseja salvar:",1,1);
+                "Digite o nome do espaco de trabalho que deseja salvar:",COLUMN*1,ROW*1);
 
         // inicializa janela para digitação do usuário
         GRAPHICUSER_clear(&(*window_user));
-        GRAPHICUSER_get(&(*window_user),workspaceTempName,1,1);
+        GRAPHICUSER_get(&(*window_user),workspaceTempName,COLUMN*1,ROW*1);
 
         // verifica se o nome digitado já existe
         // se existir, pergunta ao usuário se deve sobrescrever os dados
         if(SAVE_workspaceExist(&(*save),workspaceTempName)){
             GRAPHICINST_clear(&(*window_instructions));
-            GRAPHICINST_write(&(*window_instructions),"nome ja existe. sobrescrever?",1,1);
+            GRAPHICINST_write(&(*window_instructions),"nome ja existe. sobrescrever?",COLUMN*1,ROW*1);
+            GRAPHICINST_writeKeyboard(&(*window_instructions),COLUMN*1,ROW*2,false);
 
             // abre opções
             GRAPHICSSELECT_selectOption(&(*window_select),option);
@@ -215,11 +221,12 @@ void SAVE_defineWorkspace(SaveFile** save, GraphicInstructions** window_instruct
                 strcpy((*save)->workspace, workspaceTempName);
 
                 GRAPHICINST_clear(&(*window_instructions));
-                GRAPHICINST_write(&(*window_instructions),"nome definido com sucesso!",1,1);
+                GRAPHICINST_write(&(*window_instructions),"nome definido com sucesso!",COLUMN*1,
+                        ROW*1);
                 sleep(2);
 
                 // quebra o loop
-                noRewrite = 0;
+                continueLoop = false;
             }
 
         }
@@ -228,16 +235,18 @@ void SAVE_defineWorkspace(SaveFile** save, GraphicInstructions** window_instruct
             strcpy((*save)->workspace, workspaceTempName);
 
             GRAPHICINST_clear(&(*window_instructions));
-            GRAPHICINST_write(&(*window_instructions),"nome definido com sucesso!",1,1);
+            GRAPHICINST_write(&(*window_instructions),"nome definido com sucesso!",COLUMN*1,ROW*1);
             sleep(2);
 
-            noRewrite = 0;
+            continueLoop = false;
         }
     }
 
+    // limpa todas as janelas
     GRAPHICINST_clear(&(*window_instructions));
     GRAPHICINST_clear(&(*window_list));
     GRAPHICUSER_clear(&(*window_user));
+    GRAPHICSSELECT_clearOptions(&(*window_select));
 }
 
 /**

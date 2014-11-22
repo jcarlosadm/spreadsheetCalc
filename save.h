@@ -11,6 +11,7 @@
 #include <mxml.h>
 #include <string.h>
 #include <time.h>
+#include <stdbool.h>
 #include "matrix.h"
 #include "graphics_instructions.h"
 #include "graphics_select.h"
