@@ -23,6 +23,7 @@ typedef struct saveFile SaveFile;
 
 /**
  * Carrega arquivo de save e aloca memória. Cria arquivo se o mesmo não existir.
+ * O nome do espaço de trabalho atual é definido como uma string vazia ""
  * \return Ponteiro para SaveFile
  * \param fileName Nome do arquivo onde estão os dados
  */
@@ -36,16 +37,31 @@ SaveFile* SAVE_create(const char *fileName);
 SaveFile* SAVE_free(SaveFile* save);
 
 /**
+ * Define nome do espaço de trabalho ou abre interface com o usuário para definir
+ * \param save Ponteiro para SaveFile
+ * \param window_instructions Ponteiro para a janela de intruções. Pode informar
+ * NULL caso workspaceName seja diferente de NULL
+ * \param window_list Ponteiro para a janela que listará espaços salvos até o momento.
+ * Pode informar NULL caso workspaceName seja diferente de NULL
+ * \param window_user Ponteiro para a janela que recebe texto digitado pelo usuário.
+ * Pode informar NULL caso workspaceName seja diferente de NULL
+ * \param window_select Ponteiro para a janela de opções. Pode informar
+ * NULL caso workspaceName seja diferente de NULL
+ * \param workspaceName Nome do espaço de trabalho a ser salvo. Informe NULL caso
+ * o usuário precise definir esse nome
+ */
+void SAVE_defineWorkspace(SaveFile** save, GraphicInstructions** window_instructions,
+        GraphicInstructions** window_list, GraphicUser** window_user,
+        GraphicSelect** window_select, const char* workspaceName);
+
+/**
  * Inicia sistema de salvar espaços de trabalho em arquivo
  * \param save Ponteiro para o arquivo de salvamento
- * \param window_instructions POnteiro para a janela de intruções
- * \param window_list Ponteiro para a janela que listará espaços salvos até o momento
- * \param window_user Ponteiro para a janela que recebe texto digitado pelo usuário
+ * \param window_instructions Ponteiro para a janela de intruções
  * \param window_select Ponteiro para a janela de opções
  * \param matrix Ponteiro para a matriz de células
  */
 void SAVE_init(SaveFile** save, GraphicInstructions** window_instructions,
-        GraphicInstructions** window_list, GraphicUser** window_user,
         GraphicSelect** window_select, Matrix** matrix);
 
 #endif /* SAVE_H_ */
