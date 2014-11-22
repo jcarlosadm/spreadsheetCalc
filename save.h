@@ -1,6 +1,6 @@
 /**
  * \file save.h
- * Possui operações para salvar so dados em um arquivo xml
+ * Possui operações para salvar dados em um arquivo xml
  */
 
 #ifndef SAVE_H_
