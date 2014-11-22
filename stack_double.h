@@ -52,7 +52,7 @@ double STACKDOUBLE_peek(StackDouble** stackDouble);
 
 /**
  * Verifica se a pilha se encontra vazia
- * \return 1 se estiver vazia, ou 0 caso não esteja vazia
+ * \return Um valor diferente de 0 se estiver vazia, ou 0 caso não esteja vazia
  * \param stackDouble Ponteiro duplo para StackDouble
  */
 int STACKDOUBLE_isEmpty(StackDouble** stackDouble);

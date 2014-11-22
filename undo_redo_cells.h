@@ -41,14 +41,14 @@ int UNDOREDOCELLS_newItem(UndoRedoCells** undoRedoCells, const char* oldExpressi
 
 /**
  * Verifica se é possível executar operação undo
- * \return Retorna 1 se puder executar undo, e 0 em caso contrário
+ * \return Um valor diferente de 0 se puder executar undo, e 0 em caso contrário
  * \param undoRedoCells Ponteiro duplo para UndoRedoCells
  */
 int UNDOREDOCELLS_canUndo(UndoRedoCells** undoRedoCells);
 
 /**
  * Verifica se é possível executar operação redo
- * \return Retorna 1 se puder executar redo, e 0 em caso contrário
+ * \return Um valor diferente de 0 se puder executar redo, e 0 em caso contrário
  * \param undoRedoCells Ponteiro duplo para UndoRedoCells
  */
 int UNDOREDOCELLS_canRedo(UndoRedoCells** undoRedoCells);

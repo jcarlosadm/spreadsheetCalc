@@ -112,7 +112,7 @@ void MATRIX_showError(GraphicInstructions** graphic, const char *errorMessage,
 
 /**
  * Verifica se um caractere é número
- * \return 1 se for número, 0 em caso contrário
+ * \return Um valor diferente de 0 se for número, 0 em caso contrário
  * \param value Caractere a ser testado
  */
 int MATRIX_charIsNumber(char value){
@@ -136,7 +136,7 @@ int MATRIX_charIsAlpha(char value){
 
 /**
  * Verifica se um caractere é um operador (+, -, * ou /)
- * \return 1 se for um operador, 0 em caso contrário
+ * \return Um valor diferente de 0 se for um operador, 0 em caso contrário
  * \param value Caractere a ser testado
  */
 int MATRIX_charIsOperator(char value){

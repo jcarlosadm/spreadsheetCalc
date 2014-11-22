@@ -58,6 +58,13 @@ struct graphicCells{
  * Funções privadas
  ***************************************************************************/
 
+/**
+ * Libera células
+ * \param cells Array de ponteiros para WindowCell
+ * \param maxCells tamanho do array de ponteiros cells
+ * \param count Um contado que é incrementado a cada chamada recursiva da
+ * função (começa em 0 na primeira chamada)
+ */
 void GRAPHICSCELLS_freeCells(WindowCell** cells, int maxCells, int count){
 
     if(count >= maxCells) return;
@@ -159,7 +166,6 @@ GraphicCells* GRAPHICSCELLS_create(int positionX, int positionY, int rows, int c
     }
 
     return graphic;
-
 }
 
 /**
