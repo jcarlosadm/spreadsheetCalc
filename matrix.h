@@ -39,11 +39,27 @@ Matrix* MATRIX_create(int rows, int columns);
 Matrix* MATRIX_free(Matrix* matrix);
 
 /**
+ * Pega número de linhas da matriz
+ * \return Linhas da matriz. -1 em caso de erro
+ * \param matrix Ponteiro duplo para matriz Matrix
+ */
+int MATRIX_getRows(Matrix** matrix);
+
+/**
+ * Pega número de colunas da matriz
+ * \return Colunas da matriz. -1 em caso de erro
+ * \param matrix Ponteiro duplo para matriz Matrix
+ */
+int MATRIX_getColumns(Matrix** matrix);
+
+/**
  * Obtém expressão de uma célula específica da matriz
  * \param matrix Ponteiro duplo para matriz Matrix
  * \param row Linha da célula
  * \param column  Coluna da célula
- * \param expression String a ser preenchida com a expressão da célula
+ * \param expression String a ser preenchida com a expressão da célula.
+ * Se a célula não estiver alocada ou não houver expressão, essa variável
+ * é preenchida com uma string vazia ("")
  */
 void MATRIX_getExpression(Matrix** matrix, int row, int column, char *expression);
 

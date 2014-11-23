@@ -80,6 +80,76 @@ int SAVE_workspaceExist(SaveFile** save, const char* workspaceName){
     return mxmlFindElement((*save)->tree,(*save)->tree,workspaceName,NULL,NULL,MXML_DESCEND)? 1:0;
 }
 
+/**
+ * Obtem dados da matriz e salva no arquivo
+ * \param save Ponteiro para SaveFile
+ * \param matrix Ponteiro para matriz de células
+ */
+void SAVE_save(SaveFile** save, Matrix** matrix){
+    if(!save || !(*save) || !matrix || !(*matrix)) return;
+
+    // procura o nó com o nome do espaço de trabalho atual
+    mxml_node_t* node = mxmlFindElement((*save)->tree, (*save)->tree, (*save)->workspace,
+            NULL, NULL, MXML_DESCEND);
+
+    // se o nó existir, o elimina
+    if(node)
+        mxmlDelete(node);
+
+    // cria novo nó
+    node = mxmlNewElement((*save)->firstNode, (*save)->workspace);
+
+    // guarda string de data
+    char dateString[20];
+
+    // cria objeto de data
+    time_t date = time(0);
+
+    // cria estrutura de data com o objeto de data
+    struct tm* tm = localtime(&(date));
+
+    // gera string
+    sprintf(dateString, "%d/%d/%d",tm->tm_mon+1,tm->tm_mday,tm->tm_year+1900);
+
+    // guarda string de data no nó
+    mxmlElementSetAttr(node,"date", dateString);
+
+    // pega quantidade de linhas e colunas de células
+    int rows = MATRIX_getRows(&(*matrix)), columns = MATRIX_getColumns(&(*matrix));
+
+    // guarda expressão
+    char expression[70];
+
+    // guarda filho do nó relativo ao espaço de trabalho
+    mxml_node_t* child;
+
+    // percorre matriz e guarda expressões nas células alocadas
+    int countRow, countColumn;
+    for(countRow=1; countRow <= rows; countRow++){
+        for(countColumn=1; countColumn<= columns; countColumn++){
+            MATRIX_getExpression(&(*matrix), countRow, countColumn, expression);
+            // se a expressão é não vazia, cria novo filho no nó
+            if(strcmp(expression,"")!=0){
+                child = mxmlNewElement(node, "cell");
+                mxmlElementSetAttrf(child, "row", "%d",countRow);
+                mxmlElementSetAttrf(child, "column", "%d",countColumn);
+                mxmlElementSetAttr(child, "expression", expression);
+            }
+        }
+    }
+
+    // agora abre arquivo
+    FILE* file;
+    file = fopen((*save)->fileName, "w");
+
+    // salva
+    mxmlSaveFile((*save)->tree, file, MXML_NO_CALLBACK);
+
+    // fecha arquivo
+    fclose(file);
+
+}
+
 /******************************************************************************
  * Funções públicas
  ******************************************************************************/
@@ -258,4 +328,78 @@ int SAVE_workspaceIsNULL(SaveFile** save){
     if(!save || !(*save)) return 0;
 
     return (strcmp((*save)->workspace, "")==0);
+}
+
+/**
+ * Salva dados no espaço de trabalho atual
+ * \return 1 se obtiver sucesso e 0 em caso contrário
+ * \param save Ponteiro para o arquivo de salvamento
+ * \param window_instructions Ponteiro para a janela de intruções
+ * \param window_select Ponteiro para a janela de opções
+ * \param matrix Ponteiro para a matriz de células
+ */
+int SAVE_init(SaveFile** save, GraphicInstructions** window_instructions,
+        GraphicSelect** window_select, Matrix** matrix){
+
+    if(!save || !(*save) || !matrix || !(*matrix) || !window_instructions
+            || !(*window_instructions) || !window_select || !(*window_select))
+        return 0;
+
+    // se espaço de trabalho ainda não foi definido, sai com erro
+    if(strcmp((*save)->workspace, "")==0) return 0;
+
+    // configura janela de seleção
+    GRAPHICSSELECT_clearOptions(&(*window_select));
+    GRAPHICSSELECT_addOption(&(*window_select),YES);
+    GRAPHICSSELECT_addOption(&(*window_select),NO);
+
+    // guarda opção escolhida
+    char option[10];
+
+    // verifica se espaço de trabalho existe na árvore do arquivo
+    if(SAVE_workspaceExist(&(*save), (*save)->workspace)){
+
+        // pergunta ao usuário se deseja sobrescrever dados
+        GRAPHICINST_clear(&(*window_instructions));
+        GRAPHICINST_write(&(*window_instructions),(*save)->workspace,COLUMN*1,ROW*1);
+        GRAPHICINST_write(&(*window_instructions),"existem dados salvos. Sobrescrever?",
+                COLUMN*1,ROW*2);
+        GRAPHICINST_writeKeyboard(&(*window_instructions), COLUMN*1,ROW*3, false);
+
+        // abre janela de seleção
+        GRAPHICSSELECT_selectOption(&(*window_select), option);
+
+        // verifica qual a opção escolhida
+        // sobrescrever
+        if(strcmp(option,YES)==0){
+            SAVE_save(&(*save), &(*matrix));
+            // informa
+            GRAPHICINST_clear(&(*window_instructions));
+            GRAPHICINST_write(&(*window_instructions), "Dados sobrescritos com sucesso",COLUMN*1,
+                    ROW*1);
+            sleep(2);
+        }
+        // não sobrescrever
+        else{
+            // informa
+            GRAPHICINST_clear(&(*window_instructions));
+            GRAPHICINST_write(&(*window_instructions), "Salvamento cancelado",COLUMN*1, ROW*1);
+            sleep(2);
+        }
+    }
+
+    // espaço de trabalho não tem dados salvos. salva
+    else{
+        SAVE_save(&(*save), &(*matrix));
+        // informa
+        GRAPHICINST_clear(&(*window_instructions));
+        GRAPHICINST_write(&(*window_instructions), "Dados gravados com sucesso!",COLUMN*1, ROW*1);
+        sleep(2);
+    }
+
+    // limpa telas
+    GRAPHICINST_clear(&(*window_instructions));
+    GRAPHICSSELECT_clearOptions(&(*window_select));
+
+    return 1;
 }

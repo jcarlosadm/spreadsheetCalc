@@ -63,13 +63,14 @@ void SAVE_defineWorkspace(SaveFile** save, GraphicInstructions** window_instruct
 int SAVE_workspaceIsNULL(SaveFile** save);
 
 /**
- * Inicia sistema de salvar espaços de trabalho em arquivo
+ * Salva dados no espaço de trabalho atual
+ * \return 1 se obtiver sucesso e 0 em caso contrário
  * \param save Ponteiro para o arquivo de salvamento
  * \param window_instructions Ponteiro para a janela de intruções
  * \param window_select Ponteiro para a janela de opções
  * \param matrix Ponteiro para a matriz de células
  */
-void SAVE_init(SaveFile** save, GraphicInstructions** window_instructions,
+int SAVE_init(SaveFile** save, GraphicInstructions** window_instructions,
         GraphicSelect** window_select, Matrix** matrix);
 
 #endif /* SAVE_H_ */
