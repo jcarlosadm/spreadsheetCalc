@@ -20,7 +20,7 @@
 
 // define uma quantidade padrão de linhas e colunas para a matriz
 #define ROWS 7
-#define COLUMNS 11
+#define COLUMNS 13
 
 /**
  * Estrutura da matriz de células da planilha
