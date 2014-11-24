@@ -18,6 +18,10 @@
 #include "graphics_cells.h"
 #include "graphics_instructions.h"
 
+// define uma quantidade padrão de linhas e colunas para a matriz
+#define ROWS 7
+#define COLUMNS 11
+
 /**
  * Estrutura da matriz de células da planilha
  */
