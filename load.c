@@ -10,8 +10,8 @@
 #define ROW 1
 
 // definição dos valores sim e não
-#define YES "sim"
-#define NO "no"
+#define YES "Sim"
+#define NO "Nao"
 
 // definição do valor de cancelar
 #define CANCEL "Cancelar"
