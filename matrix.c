@@ -850,7 +850,8 @@ int MATRIX_setExpression(Matrix** matrix, int row, int column, const char* expre
             && !(*matrix)->graph.cells[cellIndex]->first){
         free((*matrix)->graph.cells[cellIndex]);
         (*matrix)->graph.cells[cellIndex] = NULL;
-        GRAPHICSCELLS_updateCell(&(*graphic), row, column, 0, KEEP_MARK, true);
+        if(graphic)
+            GRAPHICSCELLS_updateCell(&(*graphic), row, column, 0, KEEP_MARK, true);
         return 1;
     }
 
@@ -860,7 +861,8 @@ int MATRIX_setExpression(Matrix** matrix, int row, int column, const char* expre
     MATRIX_evalCellValue(&(*matrix), cellIndex, &(*graphic));
 
     // se a célula não contém expressão, então é célula vazia
-    if(strcmp((*matrix)->graph.cells[cellIndex]->expression, "")==0)
+    if(strcmp((*matrix)->graph.cells[cellIndex]->expression, "")==0
+            && graphic)
         GRAPHICSCELLS_updateCell(&(*graphic), row, column, 0, KEEP_MARK, true);
 
     // percorre todas as dependências para atualizar todas as células que dependem desta
