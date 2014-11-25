@@ -77,7 +77,7 @@ void MAINMENU_run(){
     while(mainLoop){
 
         // aloca janela de seleção
-        graphic_select = GRAPHICSSELECT_create(WINDOW_SELECT_X,
+        graphic_select = GRAPHICSSELECT_create(WINDOW_WIDTH/2,
                 WINDOW_SELECT_Y,WINDOW_SELECT_WIDTH, WINDOW_SELECT_HEIGHT);
 
         // prepara janela de seleção
@@ -87,11 +87,22 @@ void MAINMENU_run(){
             GRAPHICSSELECT_addOption(&graphic_select, OPTION_LOAD_DATA);
         GRAPHICSSELECT_addOption(&graphic_select, OPTION_EXIT);
 
+        // cria janela de instruções para conter título do programa
+        graphic_instructions = GRAPHICINST_create(WINDOW_WIDTH/4,WINDOW_HEIGHT/4,
+                WINDOW_INSTRUCTION_WIDTH,WINDOW_INSTRUCTION_HEIGHT/2);
+
+        // coloca título
+        GRAPHICINST_clear(&graphic_instructions);
+        GRAPHICINST_write(&graphic_instructions, "SpreadsheetCalc",WINDOW_INSTRUCTION_WIDTH/2,
+                WINDOW_INSTRUCTION_HEIGHT/4);
+
         // abre opções para o usuário escolher
         GRAPHICSSELECT_selectOption(&graphic_select, option);
 
         // libera janela de opções
         graphic_select = GRAPHICSSELECT_free(graphic_select);
+        // libera janela de instruções
+        graphic_instructions = GRAPHICINST_free(graphic_instructions);
 
         // verifica qual a opção escolhida
         // novo espaço de trabalho
