@@ -7,6 +7,8 @@
 #define SPREADSHEET_H_
 
 #include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
 #include "matrix.h"
 #include "undo_redo_cells.h"
 #include "save.h"
