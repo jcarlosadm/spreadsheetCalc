@@ -300,6 +300,12 @@ void SAVE_defineWorkspace(SaveFile** save, GraphicInstructions** window_instruct
             }
 
         }
+        // se string vazia, informa
+        else if(strcmp(workspaceTempName,"")==0){
+            GRAPHICINST_clear(&(*window_instructions));
+            GRAPHICINST_write(&(*window_instructions),"Voce nao digitou um nome.",COLUMN*1,ROW*1);
+            sleep(2);
+        }
         // se não existe, guarda e informa
         else{
             strcpy((*save)->workspace, workspaceTempName);
