@@ -17,6 +17,13 @@
 #include "graphics_select.h"
 #include "graphics_user.h"
 
+#ifndef SAVEFILE
+/**
+ * Nome padrão para o arquivo de salvamento
+ */
+#define SAVEFILE "save.xml"
+#endif // SAVEFILE
+
 /**
  * Estrutura do arquivo de save
  */

@@ -122,9 +122,12 @@ int LOAD_canLoad(const char *fileName){
  * \param instructions Ponteiro para a janela de instruções
  * \param select Ponteiro para a janela de seleção
  * \param fileName Nome do arquivo
+ * \param workspaceName variável que será preenchida com o nome do espaço de trabalho
+ * escolhido
  */
 int LOAD_load(Matrix** matrix, GraphicInstructions** instructions,
-        GraphicSelect** select, const char* fileName){
+        GraphicSelect** select, const char* fileName, char* workspace){
+
     if(!matrix || !(*matrix) || !instructions || !(*instructions)
             || !select || !(*select)) return 0;
 
@@ -132,7 +135,6 @@ int LOAD_load(Matrix** matrix, GraphicInstructions** instructions,
     int continueLoop = true;
 
     // guarda a opção escolhida
-    char workspaceName[30];
     char option[10];
 
     // carrega árvore de dados
@@ -151,10 +153,10 @@ int LOAD_load(Matrix** matrix, GraphicInstructions** instructions,
         GRAPHICINST_writeKeyboard(&(*instructions), COLUMN*1, ROW*2, false);
 
         // abre opções
-        GRAPHICSSELECT_selectOption(&(*select), workspaceName);
+        GRAPHICSSELECT_selectOption(&(*select), workspace);
 
         // se escolheu cancelar, retorna 0
-        if(strcmp(workspaceName,CANCEL)==0){
+        if(strcmp(workspace,CANCEL)==0){
             GRAPHICINST_clear(&(*instructions));
             GRAPHICSSELECT_clearOptions(&(*select));
             mxmlDelete(tree);
@@ -174,7 +176,7 @@ int LOAD_load(Matrix** matrix, GraphicInstructions** instructions,
 
         // escolheu sim
         if(strcmp(option, YES)==0){
-            LOAD_loadData(&(*matrix), &tree, workspaceName);
+            LOAD_loadData(&(*matrix), &tree, workspace);
 
             GRAPHICINST_clear(&(*instructions));
             GRAPHICINST_write(&(*instructions), "Dados carregados.", COLUMN*1, ROW*1);

@@ -14,6 +14,13 @@
 #include "graphics_instructions.h"
 #include "graphics_select.h"
 
+#ifndef SAVEFILE
+/**
+ * Nome padrão para o arquivo de salvamento
+ */
+#define SAVEFILE "save.xml"
+#endif // SAVEFILE
+
 /**
  * Verifica se existem dados para carregar
  * \return 0 se não existem dados, e diferente de 0 se existem
@@ -28,8 +35,10 @@ int LOAD_canLoad(const char *fileName);
  * \param instructions Ponteiro para a janela de instruções
  * \param select Ponteiro para a janela de seleção
  * \param fileName Nome do arquivo
+ * \param workspaceName Variável que será preenchida com o nome do espaço de trabalho
+ * escolhido
  */
 int LOAD_load(Matrix** matrix, GraphicInstructions** instructions,
-        GraphicSelect** select, const char* fileName);
+        GraphicSelect** select, const char* fileName, char* workspace);
 
 #endif /* LOAD_H_ */

@@ -18,8 +18,14 @@
 #include "graphics_cells.h"
 #include "graphics_instructions.h"
 
-// define uma quantidade padrão de linhas e colunas para a matriz
+/**
+ * Define uma quantidade padrão de linhas para a matriz
+ */
 #define ROWS 7
+
+/**
+ * Define uma quantidade padrão de colunas para a matriz
+ */
 #define COLUMNS 13
 
 /**
