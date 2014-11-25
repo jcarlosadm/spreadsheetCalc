@@ -184,24 +184,37 @@ void SPREADSHEET_changeExpression(Matrix** matrix, int currentRow, int currentCo
             // limpa instruções
             GRAPHICINST_clear(&(*graphic_instructions));
 
-            // verifica se a expressão é válida e não há referências cíclicas...
+            // verifica se a expressão é válida
             if(MATRIX_validateExpression(&(*graphic_instructions), MATRIX_getRows(&(*matrix)),
-                MATRIX_getColumns(&(*matrix)),userText) && !MATRIX_checkCyclicDependency(currentRow,
-                        currentColumn,userText, &(*matrix))){
+                MATRIX_getColumns(&(*matrix)),userText)){
 
-                // configura expressão na célula
-                MATRIX_setExpression(&(*matrix), currentRow, currentColumn, userText,
-                        &(*undoRedo), &(*graphic_cells));
+                // verifica se a expressão possui referência cíclica
+                if(MATRIX_checkCyclicDependency(currentRow,currentColumn,userText, &(*matrix))){
+                    // informa usuário
+                    GRAPHICINST_clear(&(*graphic_instructions));
+                    GRAPHICINST_write(&(*graphic_instructions), "Ha referencia ciclica na expressao",
+                            COLUMN*1, ROW*1);
 
-                // informa usuário
-                GRAPHICINST_clear(&(*graphic_instructions));
-                GRAPHICINST_write(&(*graphic_instructions), "Expressao definida com sucesso",
-                        COLUMN*1, ROW*1);
-                // espera 1 segundo
-                sleep(1);
+                    // espera 1 segundo
+                    sleep(1);
+                }
+                // se não possuir referência cíclica
+                else{
+                    // configura expressão na célula
+                    MATRIX_setExpression(&(*matrix), currentRow, currentColumn, userText,
+                            &(*undoRedo), &(*graphic_cells));
 
-                // sai
-                mainLoop = false;
+                    // informa usuário
+                    GRAPHICINST_clear(&(*graphic_instructions));
+                    GRAPHICINST_write(&(*graphic_instructions), "Expressao definida com sucesso",
+                            COLUMN*1, ROW*1);
+
+                    // espera 1 segundo
+                    sleep(1);
+
+                    // sai
+                    mainLoop = false;
+                }
             }
             else
                 sleep(2);
@@ -282,16 +295,19 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
         graphic_cells = GRAPHICSCELLS_create(WINDOW_CELLS_X,WINDOW_CELLS_Y,
                         ROWS,COLUMNS);
 
+    // ponteiro para a matriz
+    Matrix* newMatrix = NULL;
+
     // Inicializa matriz se não inicializada
     if(!matrix){
         // cria a matriz
-        Matrix* newMatrix = MATRIX_create(ROWS, COLUMNS);
-        matrix = &newMatrix;
+        newMatrix = MATRIX_create(ROWS, COLUMNS);
     }
     // caso já tenha sido inicializada
     else{
+        newMatrix = *matrix;
         // neste caso devemos percorrer a matriz e atualizar o gráfico das células
-        SPREADSHEET_updateGraphicCells(&(*matrix),&graphic_cells);
+        SPREADSHEET_updateGraphicCells(&newMatrix,&graphic_cells);
     }
 
     // Ponteiro para undo_redo_cells
@@ -333,19 +349,92 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
         // se for selecionar célula
         if(strcmp(option,OPTION_SELECT_CELL)==0){
 
-            // informa o usuário para escolher célula
-            GRAPHICINST_clear(&graphic_instructions);
-            GRAPHICINST_write(&graphic_instructions, "Escolha uma celula com os direcionais.",
-                    COLUMN*1, ROW*1);
-            GRAPHICINST_writeKeyboard(&graphic_instructions, COLUMN*1, ROW*2, true);
+            // cria loop interno com mainLoop
+            while(mainLoop){
+                // informa o usuário para escolher célula
+                GRAPHICINST_clear(&graphic_instructions);
+                GRAPHICINST_write(&graphic_instructions, "Escolha uma celula com os direcionais.",
+                        COLUMN*1, ROW*1);
+                GRAPHICINST_writeKeyboard(&graphic_instructions, COLUMN*1, ROW*2, true);
 
-            // inicializa escolha de célula
-            GRAPHICSCELL_selectCell(&graphic_cells, &currentRow, &currentColumn);
+                // inicializa escolha de célula
+                GRAPHICSCELL_selectCell(&graphic_cells, &currentRow, &currentColumn);
 
-            // pergunta se deseja modificar a expressão
+                // pergunta se deseja modificar a expressão
+                GRAPHICINST_clear(&graphic_instructions);
+                GRAPHICINST_write(&graphic_instructions, "Deseja modificar a expressao desta celula?",
+                        COLUMN*1, ROW*1);
+                GRAPHICINST_writeKeyboard(&graphic_instructions, COLUMN*1, ROW*2,false);
+
+                // prepara opções
+                GRAPHICSSELECT_clearOptions(&graphic_select);
+                GRAPHICSSELECT_addOption(&graphic_select, YES);
+                GRAPHICSSELECT_addOption(&graphic_select, NO);
+
+                // abre opções
+                GRAPHICSSELECT_selectOption(&graphic_select, option);
+
+                // se sim
+                if(strcmp(option,YES)==0){
+                    // abre interface para mudança de expressão
+                    SPREADSHEET_changeExpression(&newMatrix, currentRow,currentColumn,
+                            &graphic_instructions, &graphic_cells, &graphic_select,
+                            &graphic_user, &undoRedo);
+                }
+
+                // pergunta se deseja selecionar outra célula
+                GRAPHICINST_clear(&graphic_instructions);
+                GRAPHICINST_write(&graphic_instructions, "Deseja selecionar outra celula?",
+                        COLUMN*1, ROW*1);
+                GRAPHICINST_writeKeyboard(&graphic_instructions, COLUMN*1, ROW*2,false);
+
+                // prepara opções
+                GRAPHICSSELECT_clearOptions(&graphic_select);
+                GRAPHICSSELECT_addOption(&graphic_select, YES);
+                GRAPHICSSELECT_addOption(&graphic_select, NO);
+
+                // abre opções
+                GRAPHICSSELECT_selectOption(&graphic_select, option);
+
+                // se não, sai deste loop interno
+                if(strcmp(option,NO)==0)
+                    mainLoop=false;
+            }
+
+            // loop principal volta a ser true
+            mainLoop = true;
+        }
+
+        // se for inserir expressão
+        else if(strcmp(option, OPTION_INSERT_EXPRESSION)==0){
+            // abre interface para mudança de expressão
+            SPREADSHEET_changeExpression(&newMatrix, currentRow,currentColumn,
+                    &graphic_instructions, &graphic_cells, &graphic_select,
+                    &graphic_user, &undoRedo);
+        }
+
+        // se for desfazer
+        else if(strcmp(option, OPTION_UNDO)==0){
+            MATRIX_undo(&newMatrix,&undoRedo, &graphic_cells);
+        }
+
+        // se for refazer
+        else if(strcmp(option, OPTION_REDO)==0){
+            MATRIX_redo(&newMatrix, &undoRedo, &graphic_cells);
+        }
+
+        // se for salvar espaço de trabalho
+        else if(strcmp(option, OPTION_SAVE)==0){
+            SAVE_init(&save,&graphic_instructions, &graphic_select, &newMatrix);
+        }
+
+        // se for sair
+        else{
+            // pergunta se deseja selecionar outra célula
             GRAPHICINST_clear(&graphic_instructions);
-            GRAPHICINST_write(&graphic_instructions, "Deseja modificar a expressao desta celula?",
+            GRAPHICINST_write(&graphic_instructions, "Deseja mesmo sair?",
                     COLUMN*1, ROW*1);
+            GRAPHICINST_writeKeyboard(&graphic_instructions, COLUMN*1, ROW*2,false);
 
             // prepara opções
             GRAPHICSSELECT_clearOptions(&graphic_select);
@@ -355,35 +444,14 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
             // abre opções
             GRAPHICSSELECT_selectOption(&graphic_select, option);
 
-            // se sim
+            // se não, sai deste loop interno
             if(strcmp(option,YES)==0){
-
+                GRAPHICINST_clear(&graphic_instructions);
+                GRAPHICINST_write(&graphic_instructions, "Ate mais!",
+                        COLUMN*1, ROW*1);
+                sleep(2);
+                mainLoop=false;
             }
-        }
-
-        // se for inserir expressão
-        else if(strcmp(option, OPTION_INSERT_EXPRESSION)==0){
-
-        }
-
-        // se for desfazer
-        else if(strcmp(option, OPTION_UNDO)==0){
-
-        }
-
-        // se for refazer
-        else if(strcmp(option, OPTION_REDO)==0){
-
-        }
-
-        // se for salvar espaço de trabalho
-        else if(strcmp(option, OPTION_SAVE)==0){
-
-        }
-
-        // se for sair
-        else{
-
         }
     }
 
@@ -393,7 +461,7 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
     GRAPHICUSER_clear(&graphic_user);
 
     // libera memória da matriz de célula
-    (*matrix) = MATRIX_free((*matrix));
+    newMatrix = MATRIX_free(newMatrix);
 
     // libera memória do save
     save = SAVE_free(save);
@@ -408,13 +476,3 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
     graphic_user = GRAPHICUSER_free(graphic_user);
 
 }
-
-
-
-
-
-
-
-
-
-

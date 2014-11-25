@@ -280,8 +280,10 @@ void GRAPHICSCELL_selectCell(GraphicCells** graphicCells, int *cellRow, int *cel
         // recebe pressionamento de tecla
         keyPressed = getch();
 
-        if(keyPressed!=10)
+        if(keyPressed!=10){
             GRAPHICSCELLS_drawBox(&((*graphicCells)->windowCell[index]),OFF);
+            (*graphicCells)->windowCell[index]->status = OFF;
+        }
 
         // faz algo de acordo com a tecla pressionada
         switch(keyPressed){
@@ -307,8 +309,10 @@ void GRAPHICSCELL_selectCell(GraphicCells** graphicCells, int *cellRow, int *cel
             break;
         }
 
-        if(keyPressed!=10)
+        if(keyPressed!=10){
             GRAPHICSCELLS_drawBox(&((*graphicCells)->windowCell[index]),ON);
+            (*graphicCells)->windowCell[index]->status = ON;
+        }
     }
 
 }
