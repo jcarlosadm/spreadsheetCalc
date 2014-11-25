@@ -18,13 +18,13 @@
 #define WINDOW_INSTRUCTION_X 10
 #define WINDOW_INSTRUCTION_Y 24
 #define WINDOW_INSTRUCTION_WIDTH 110
-#define WINDOW_INSTRUCTION_HEIGHT 8
+#define WINDOW_INSTRUCTION_HEIGHT 12
 
 // Posicionamento e dimensões da tela de usuário
 #define WINDOW_USER_X WINDOW_INSTRUCTION_X
 #define WINDOW_USER_Y WINDOW_INSTRUCTION_Y+WINDOW_INSTRUCTION_HEIGHT
 #define WINDOW_USER_WIDTH WINDOW_INSTRUCTION_WIDTH
-#define WINDOW_USER_HEIGHT WINDOW_INSTRUCTION_HEIGHT
+#define WINDOW_USER_HEIGHT 4
 
 // Posicionamento e dimensões da tela de opções
 #define WINDOW_SELECT_X WINDOW_INSTRUCTION_X+WINDOW_INSTRUCTION_WIDTH
@@ -74,8 +74,11 @@ void SPREADSHEET_updateGraphicCells(Matrix** matrix, GraphicCells** graphic){
     // guarda expressão da célula
     char expression[70];
 
-    for(row=1 ; row<=ROWS ; row++){
-        for(column=1 ; column<=COLUMNS ; column++){
+    // total de linhas e colunas
+    int rows = MATRIX_getRows(&(*matrix)), columns = MATRIX_getColumns(&(*matrix));
+
+    for(row=1 ; row <= rows ; row++){
+        for(column=1 ; column <= columns ; column++){
             // pega expressão da célula
             MATRIX_getExpression(&(*matrix), row, column, expression);
             // se expressão não vazia, atualiza gráfico
@@ -85,6 +88,130 @@ void SPREADSHEET_updateGraphicCells(Matrix** matrix, GraphicCells** graphic){
             }
         }
     }
+}
+
+/**
+ * Algoritmo para alterar expressão de uma célula
+ * \param matrix Ponteiro para matriz de células
+ * \param currentRow Número da linha atual
+ * \param currentColumn Número da coluna atual
+ * \param graphic_instructions Ponteiro para a janela de instruções
+ * \param graphic_cells Ponteiro para o gráfico da matriz de células
+ * \param graphic_select Ponteiro para a janela de seleção
+ * \param graphic_user Ponteiro para a janela de entrada do usuário
+ * \param undoRedo Ponteiro para fila desfazer/refazer
+ */
+void SPREADSHEET_changeExpression(Matrix** matrix, int currentRow, int currentColumn,
+        GraphicInstructions** graphic_instructions, GraphicCells** graphic_cells,
+        GraphicSelect** graphic_select, GraphicUser** graphic_user,
+        UndoRedoCells** undoRedo){
+
+    if(!matrix || !(*matrix) || !graphic_instructions || !(*graphic_instructions)
+            || !graphic_cells || !(*graphic_cells) || !graphic_select
+            || !(*graphic_select) || !graphic_user || !(*graphic_user)
+            || !undoRedo || !(*undoRedo)) return;
+
+    // guarda a entrada do usuário
+    char userText[70];
+    // guarda a opção escolhida
+    char option[30];
+
+    // guarda expressão atual
+    char expression[70];
+
+    // controla loop principal da função
+    int mainLoop = true;
+
+    while(mainLoop){
+
+        // pega expressão atual
+        MATRIX_getExpression(&(*matrix), currentRow, currentColumn, expression);
+
+        // pede para o usuário digitar uma expressão ou digitar 00 para cancelar
+        GRAPHICINST_clear(&(*graphic_instructions));
+        GRAPHICINST_write(&(*graphic_instructions),
+                "Digite a expressao, ou 00 para cancelar", COLUMN*1, ROW*1);
+        GRAPHICINST_write(&(*graphic_instructions),
+                "  A expressao devera vir na forma pos-fixa ('2 2+ ao inves de 2 + 2')",
+                COLUMN*1, ROW*2);
+        GRAPHICINST_write(&(*graphic_instructions),
+                "  Separe dois numeros consecutivos por meio de espaco",
+                COLUMN*1, ROW*3);
+        GRAPHICINST_write(&(*graphic_instructions),
+                "  As referencias sao da forma [letra][numero]. exemplo: a1 ou A1",
+                COLUMN*1, ROW*4);
+        GRAPHICINST_write(&(*graphic_instructions),
+                "  As funcoes que podem ser usadas sao: sum, mean, max e min",
+                COLUMN*1, ROW*5);
+        GRAPHICINST_write(&(*graphic_instructions),
+                "  Essas funcoes aceitam valores separados por virgula,",
+                COLUMN*1, ROW*6);
+        GRAPHICINST_write(&(*graphic_instructions),
+                "    ou intervalos (duas referencias separadas por dois pontos)",
+                COLUMN*1, ROW*7);
+        GRAPHICINST_write(&(*graphic_instructions),
+                "  Exemplo: 2sum(a1,4.5,b2)+ ou a3mean(b1:d2)*",
+                COLUMN*1, ROW*8);
+        GRAPHICINST_write(&(*graphic_instructions),"Expressão atual: ",COLUMN*1, ROW*9);
+        GRAPHICINST_write(&(*graphic_instructions),expression,COLUMN*18, ROW*9);
+
+        // Abre entrada do usuário
+        GRAPHICUSER_clear(&(*graphic_user));
+        GRAPHICUSER_get(&(*graphic_user), userText, COLUMN*1, ROW*1);
+
+        // escolheu 00?
+        if(strcmp(userText, "00")==0){
+
+            // sair?
+            GRAPHICINST_clear(&(*graphic_instructions));
+            GRAPHICINST_write(&(*graphic_instructions), "Desejar cancelar a operacao?",
+                    COLUMN*1, ROW*1);
+            // prepara opções
+            GRAPHICSSELECT_clearOptions(&(*graphic_select));
+            GRAPHICSSELECT_addOption(&(*graphic_select), YES);
+            GRAPHICSSELECT_addOption(&(*graphic_select), NO);
+
+            // abre opções
+            GRAPHICSSELECT_selectOption(&(*graphic_select), option);
+
+            // se sim, sai
+            if(strcmp(option, YES)==0)
+                mainLoop = false;
+        }
+        // inseriu uma expressão
+        else{
+
+            // limpa instruções
+            GRAPHICINST_clear(&(*graphic_instructions));
+
+            // verifica se a expressão é válida e não há referências cíclicas...
+            if(MATRIX_validateExpression(&(*graphic_instructions), MATRIX_getRows(&(*matrix)),
+                MATRIX_getColumns(&(*matrix)),userText) && !MATRIX_checkCyclicDependency(currentRow,
+                        currentColumn,userText, &(*matrix))){
+
+                // configura expressão na célula
+                MATRIX_setExpression(&(*matrix), currentRow, currentColumn, userText,
+                        &(*undoRedo), &(*graphic_cells));
+
+                // informa usuário
+                GRAPHICINST_clear(&(*graphic_instructions));
+                GRAPHICINST_write(&(*graphic_instructions), "Expressao definida com sucesso",
+                        COLUMN*1, ROW*1);
+                // espera 1 segundo
+                sleep(1);
+
+                // sai
+                mainLoop = false;
+            }
+            else
+                sleep(2);
+        }
+    }
+
+    // limpa janelas
+    GRAPHICINST_clear(&(*graphic_instructions));
+    GRAPHICUSER_clear(&(*graphic_user));
+    GRAPHICSSELECT_clearOptions(&(*graphic_select));
 
 }
 
@@ -148,14 +275,18 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
         SAVE_defineWorkspace(&save, NULL, NULL, NULL, NULL, workspaceName);
 
     // cria o gráfico da matriz
-    graphic_cells = GRAPHICSCELLS_create(WINDOW_CELLS_X,WINDOW_CELLS_Y,ROWS,COLUMNS);
+    if(matrix)
+        graphic_cells = GRAPHICSCELLS_create(WINDOW_CELLS_X,WINDOW_CELLS_Y,
+                MATRIX_getRows(&(*matrix)),MATRIX_getColumns(&(*matrix)));
+    else
+        graphic_cells = GRAPHICSCELLS_create(WINDOW_CELLS_X,WINDOW_CELLS_Y,
+                        ROWS,COLUMNS);
 
     // Inicializa matriz se não inicializada
     if(!matrix){
         // cria a matriz
         Matrix* newMatrix = MATRIX_create(ROWS, COLUMNS);
         matrix = &newMatrix;
-        *matrix = newMatrix;
     }
     // caso já tenha sido inicializada
     else{
@@ -202,6 +333,32 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
         // se for selecionar célula
         if(strcmp(option,OPTION_SELECT_CELL)==0){
 
+            // informa o usuário para escolher célula
+            GRAPHICINST_clear(&graphic_instructions);
+            GRAPHICINST_write(&graphic_instructions, "Escolha uma celula com os direcionais.",
+                    COLUMN*1, ROW*1);
+            GRAPHICINST_writeKeyboard(&graphic_instructions, COLUMN*1, ROW*2, true);
+
+            // inicializa escolha de célula
+            GRAPHICSCELL_selectCell(&graphic_cells, &currentRow, &currentColumn);
+
+            // pergunta se deseja modificar a expressão
+            GRAPHICINST_clear(&graphic_instructions);
+            GRAPHICINST_write(&graphic_instructions, "Deseja modificar a expressao desta celula?",
+                    COLUMN*1, ROW*1);
+
+            // prepara opções
+            GRAPHICSSELECT_clearOptions(&graphic_select);
+            GRAPHICSSELECT_addOption(&graphic_select, YES);
+            GRAPHICSSELECT_addOption(&graphic_select, NO);
+
+            // abre opções
+            GRAPHICSSELECT_selectOption(&graphic_select, option);
+
+            // se sim
+            if(strcmp(option,YES)==0){
+
+            }
         }
 
         // se for inserir expressão
