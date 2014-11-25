@@ -17,7 +17,7 @@
 // Posicionamento e dimensões da tela de instruções
 #define WINDOW_INSTRUCTION_X 10
 #define WINDOW_INSTRUCTION_Y 24
-#define WINDOW_INSTRUCTION_WIDTH 110
+#define WINDOW_INSTRUCTION_WIDTH 90
 #define WINDOW_INSTRUCTION_HEIGHT 12
 
 // Posicionamento e dimensões da tela de usuário

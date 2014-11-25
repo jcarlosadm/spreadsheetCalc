@@ -131,6 +131,8 @@ GraphicSelect* GRAPHICSSELECT_free(GraphicSelect* graphic){
     GRAPHICSSELECT_freeOptions(&(graphic->sentinel->next),&(graphic->sentinel));
     free(graphic->sentinel);
 
+    wclear(graphic->window);
+    wrefresh(graphic->window);
     delwin(graphic->window);
     free(graphic);
 
