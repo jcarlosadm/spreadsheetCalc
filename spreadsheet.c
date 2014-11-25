@@ -70,7 +70,7 @@ void SPREADSHEET_updateGraphicCells(Matrix** matrix, GraphicCells** graphic){
     // guarda linha e coluna
     int row, column;
     // guarda valor da célula
-    int value;
+    double value;
     // guarda expressão da célula
     char expression[70];
 
