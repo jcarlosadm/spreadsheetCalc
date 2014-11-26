@@ -3,11 +3,16 @@ spreadsheetCalc
 
 Electronic spreadsheet in command line
 
-Temp Makefile: [link](https://www.dropbox.com/s/599k47561wgcaoa/Makefile?dl=0)
-
-Temp main.c: [link](https://www.dropbox.com/s/vef4893i5v2ghr4/main.c?dl=0)
-
 Note: this is a project class.
+
+Run
+--------
+
+Compile: `make -f Makefile` in root directory of project.
+
+Maximize size of the terminal
+
+Run `main`.
 
 Modules Diagrams
 ----------
@@ -35,12 +40,6 @@ Documentation
 -------------
 
 Using doxygen.
-
-Configuration files: doxygen_config and mainpage.dox in root directory.
-
-Temp doxygen_config: [link](https://www.dropbox.com/s/wtz2k1dm6b7rol7/doxygen_config?dl=0)
-
-Temp mainpage.dox: [link](https://www.dropbox.com/s/9nqf145i9m87ahy/mainpage.dox?dl=0)
 
 Making docs (in root directory): `doxygen doxygen_config`
 
