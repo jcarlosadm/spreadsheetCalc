@@ -10,6 +10,12 @@
 // Altura total da janela
 #define WINDOW_HEIGHT 40
 
+// Posicionamento  e dimensões da janela de título
+#define WINDOW_TITLE_WIDTH 50
+#define WINDOW_TITLE_X ((WINDOW_WIDTH/2) - (WINDOW_TITLE_WIDTH/2))
+#define WINDOW_TITLE_Y 10
+#define WINDOW_TITLE_HEIGHT 5
+
 // Posicionamento e dimensões da tela de instruções
 #define WINDOW_INSTRUCTION_X 10
 #define WINDOW_INSTRUCTION_Y 24
@@ -52,6 +58,9 @@ void MAINMENU_run(){
     clear();
     refresh();
 
+    // Ponteiro para janela de título
+    WINDOW* windowTitle = NULL;
+
     // variável que controla o loop principal da função
     int mainLoop = true;
 
@@ -87,22 +96,25 @@ void MAINMENU_run(){
             GRAPHICSSELECT_addOption(&graphic_select, OPTION_LOAD_DATA);
         GRAPHICSSELECT_addOption(&graphic_select, OPTION_EXIT);
 
-        // cria janela de instruções para conter título do programa
-        graphic_instructions = GRAPHICINST_create(WINDOW_WIDTH/4,WINDOW_HEIGHT/4,
-                WINDOW_INSTRUCTION_WIDTH,WINDOW_INSTRUCTION_HEIGHT/2);
+        // cria janela de título
+        windowTitle = newwin(WINDOW_TITLE_HEIGHT,WINDOW_TITLE_WIDTH,
+                WINDOW_TITLE_Y,WINDOW_TITLE_X);
 
-        // coloca título
-        GRAPHICINST_clear(&graphic_instructions);
-        GRAPHICINST_write(&graphic_instructions, "SpreadsheetCalc",WINDOW_INSTRUCTION_WIDTH/2,
-                WINDOW_INSTRUCTION_HEIGHT/4);
+        // escreve na janela de título
+        mvwprintw(windowTitle, WINDOW_TITLE_HEIGHT/2,(WINDOW_TITLE_WIDTH/2)-7,
+                "SpreadsheetCalc");
+        box(windowTitle,' ','=');
+        wrefresh(windowTitle);
 
         // abre opções para o usuário escolher
         GRAPHICSSELECT_selectOption(&graphic_select, option);
 
         // libera janela de opções
         graphic_select = GRAPHICSSELECT_free(graphic_select);
-        // libera janela de instruções
-        graphic_instructions = GRAPHICINST_free(graphic_instructions);
+        // limpa e libera tela de título
+        wclear(windowTitle);
+        wrefresh(windowTitle);
+        delwin(windowTitle);
 
         // verifica qual a opção escolhida
         // novo espaço de trabalho
