@@ -1032,7 +1032,7 @@ int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int colum
 
             // vai para a parte numérica da referência
             count++;
-            if(expression[count] > intLimit){
+            if(expression[count] > intLimit || expression[count]==MIN_ASCII_NUMBER){
                 sprintf(message,
                    "a referencia %c, na posicao %d, vai alem da quantidade de linhas",
                    expression[count],count);
@@ -1177,7 +1177,7 @@ int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int colum
                     count++;
 
                     // referência vai além da quantidade de linhas
-                    if(expression[count] > intLimit){
+                    if(expression[count] > intLimit || expression[count]==MIN_ASCII_NUMBER){
                         sprintf(message,
                       "a referencia %c, na posicao %d, vai alem da quantidade de linhas",
                            expression[count],count);
@@ -1251,8 +1251,6 @@ int MATRIX_checkCyclicDependency(int row, int column, const char* expression, Ma
     // calcula o índice da célula atual
     int cellIndex = MATRIX_evalCellIndex(row,column, (*matrix)->columns);
 
-    if(!(*matrix)->graph.cells[cellIndex]) return 0;
-
     // Ponteiro usado para realizar iterações nas dependências da célula
     Dependency* cellDependency = NULL;
 
@@ -1318,20 +1316,22 @@ int MATRIX_checkCyclicDependency(int row, int column, const char* expression, Ma
                         }
 
                         // percorre dependências da célula
-                        cellDependency = (*matrix)->graph.cells[cellIndex]->first;
-                        while(cellDependency){
-                            // se a dependência atual bate com o índice da célula atual, erro
-                            if(cellDependency->value == cellDestiny){
-                                return 1;
+                        if((*matrix)->graph.cells[cellIndex]){
+                            cellDependency = (*matrix)->graph.cells[cellIndex]->first;
+                            while(cellDependency){
+                                // se a dependência atual bate com o índice da célula atual, erro
+                                if(cellDependency->value == cellDestiny){
+                                    return 1;
+                                }
+                                // chama função recursiva para checar na célula dependente
+                                result = MATRIX_checkCyclicDependencyRecursive(cellDependency->value,
+                                        cellDestiny, &(*matrix));
+
+                                // encontrou dependência cíclica
+                                if(result) return 1;
+
+                                cellDependency = cellDependency->next;
                             }
-                            // chama função recursiva para checar na célula dependente
-                            result = MATRIX_checkCyclicDependencyRecursive(cellDependency->value,
-                                    cellDestiny, &(*matrix));
-
-                            // encontrou dependência cíclica
-                            if(result) return 1;
-
-                            cellDependency = cellDependency->next;
                         }
                     }
                 }
@@ -1353,20 +1353,22 @@ int MATRIX_checkCyclicDependency(int row, int column, const char* expression, Ma
             }
 
             // percorre dependências da célula
-            cellDependency = (*matrix)->graph.cells[cellIndex]->first;
-            while(cellDependency){
-                // se a dependência atual bate com o índice da célula atual, erro
-                if(cellDependency->value == cellDestiny){
-                    return 1;
+            if((*matrix)->graph.cells[cellIndex]){
+                cellDependency = (*matrix)->graph.cells[cellIndex]->first;
+                while(cellDependency){
+                    // se a dependência atual bate com o índice da célula atual, erro
+                    if(cellDependency->value == cellDestiny){
+                        return 1;
+                    }
+                    // chama função recursiva para checar na célula dependente
+                    result = MATRIX_checkCyclicDependencyRecursive(cellDependency->value,
+                            cellDestiny, &(*matrix));
+
+                    // encontrou dependência cíclica
+                    if(result) return 1;
+
+                    cellDependency = cellDependency->next;
                 }
-                // chama função recursiva para checar na célula dependente
-                result = MATRIX_checkCyclicDependencyRecursive(cellDependency->value,
-                        cellDestiny, &(*matrix));
-
-                // encontrou dependência cíclica
-                if(result) return 1;
-
-                cellDependency = cellDependency->next;
             }
 
             // presume que essa referência é a primeira de um intervalo

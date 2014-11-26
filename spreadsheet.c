@@ -14,6 +14,12 @@
 #define WINDOW_CELLS_X 0
 #define WINDOW_CELLS_Y 0
 
+// Posicionamento e dimensões da tela de expressão
+#define WINDOW_EXPRESSION_X 10
+#define WINDOW_EXPRESSION_Y 21
+#define WINDOW_EXPRESSION_WIDTH 130
+#define WINDOW_EXPRESSION_HEIGHT 3
+
 // Posicionamento e dimensões da tela de instruções
 #define WINDOW_INSTRUCTION_X 10
 #define WINDOW_INSTRUCTION_Y 24
@@ -152,8 +158,6 @@ void SPREADSHEET_changeExpression(Matrix** matrix, int currentRow, int currentCo
         GRAPHICINST_write(&(*graphic_instructions),
                 "  Exemplo: 2sum(a1,4.5,b2)+ ou a3mean(b1:d2)*",
                 COLUMN*1, ROW*8);
-        GRAPHICINST_write(&(*graphic_instructions),"Expressão atual: ",COLUMN*1, ROW*9);
-        GRAPHICINST_write(&(*graphic_instructions),expression,COLUMN*18, ROW*9);
 
         // Abre entrada do usuário
         GRAPHICUSER_clear(&(*graphic_user));
@@ -244,6 +248,15 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
     // variáveis que guardam a linha inicial e coluna inicial
     int currentRow=1, currentColumn=1;
 
+    // guarda opção escolhida
+    char option[30];
+
+    // guarda expressão da célula atual
+    char expression[70];
+
+    // controla loop principal
+    int mainLoop = true;
+
     // Ponteiro para a janela de usuário
     GraphicUser* graphic_user = NULL;
     // Ponteiro para a janela de instruções
@@ -254,6 +267,8 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
     GraphicSelect* graphic_select = NULL;
     // Ponteiro para a janela de células
     GraphicCells* graphic_cells = NULL;
+    // Ponteiro para a janela de expressão
+    GraphicInstructions* graphic_expression = NULL;
 
     // Ponteiro para dados de salvamento
     SaveFile* save = SAVE_create(SAVEFILE);
@@ -295,6 +310,10 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
         graphic_cells = GRAPHICSCELLS_create(WINDOW_CELLS_X,WINDOW_CELLS_Y,
                         ROWS,COLUMNS);
 
+    // cria a janela de expressões
+    graphic_expression = GRAPHICINST_create(WINDOW_EXPRESSION_X,WINDOW_EXPRESSION_Y,
+            WINDOW_EXPRESSION_WIDTH, WINDOW_EXPRESSION_HEIGHT);
+
     // ponteiro para a matriz
     Matrix* newMatrix = NULL;
 
@@ -312,12 +331,6 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
 
     // Ponteiro para undo_redo_cells
     UndoRedoCells* undoRedo = UNDOREDOCELLS_create();
-
-    // guarda opção escolhida
-    char option[30];
-
-    // controla loop principal
-    int mainLoop = true;
 
     // loop principal
     while(mainLoop){
@@ -341,6 +354,13 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
                 COLUMN*1, ROW*1);
         GRAPHICINST_writeKeyboard(&graphic_instructions,COLUMN*1, ROW*2, false);
 
+        // pega expressão da célula
+        MATRIX_getExpression(&(*matrix),currentRow,currentColumn,expression);
+        // coloca na tela de expressão
+        GRAPHICINST_clear(&graphic_expression);
+        GRAPHICINST_write(&graphic_expression, "Expression:",1,1);
+        GRAPHICINST_write(&graphic_expression,expression,13,1);
+
         // abre a janela de opções e guarda resultado da escolha em option
         GRAPHICSSELECT_selectOption(&graphic_select, option);
 
@@ -359,6 +379,13 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
 
                 // inicializa escolha de célula
                 GRAPHICSCELL_selectCell(&graphic_cells, &currentRow, &currentColumn);
+
+                // pega expressão da célula
+                MATRIX_getExpression(&(*matrix),currentRow,currentColumn,expression);
+                // coloca na tela de expressão
+                GRAPHICINST_clear(&graphic_expression);
+                GRAPHICINST_write(&graphic_expression, "Expression:",1,1);
+                GRAPHICINST_write(&graphic_expression,expression,13,1);
 
                 // pergunta se deseja modificar a expressão
                 GRAPHICINST_clear(&graphic_instructions);
@@ -380,6 +407,13 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
                     SPREADSHEET_changeExpression(&newMatrix, currentRow,currentColumn,
                             &graphic_instructions, &graphic_cells, &graphic_select,
                             &graphic_user, &undoRedo);
+
+                    // pega expressão da célula
+                    MATRIX_getExpression(&(*matrix),currentRow,currentColumn,expression);
+                    // coloca na tela de expressão
+                    GRAPHICINST_clear(&graphic_expression);
+                    GRAPHICINST_write(&graphic_expression, "Expression:",1,1);
+                    GRAPHICINST_write(&graphic_expression,expression,13,1);
                 }
 
                 // pergunta se deseja selecionar outra célula
@@ -474,5 +508,6 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
     graphic_cells = GRAPHICSCELLS_free(graphic_cells);
     graphic_select = GRAPHICSSELECT_free(graphic_select);
     graphic_user = GRAPHICUSER_free(graphic_user);
+    graphic_expression= GRAPHICINST_free(graphic_expression);
 
 }

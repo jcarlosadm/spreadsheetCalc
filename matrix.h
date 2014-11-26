@@ -21,7 +21,7 @@
 /**
  * Define uma quantidade padrão de linhas para a matriz
  */
-#define ROWS 7
+#define ROWS 6
 
 /**
  * Define uma quantidade padrão de colunas para a matriz
