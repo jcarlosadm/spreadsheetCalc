@@ -395,6 +395,19 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphi
     char expression[60];
     strcpy(expression, (*matrix)->graph.cells[cellIndex]->expression);
 
+    // se expressão vazia, valor da célula é zero
+    if(strcmp(expression,"")==0){
+        // O valor da célula será o resultado da árvore de expressão binária
+        (*matrix)->graph.cells[cellIndex]->value = 0;
+
+        // atualiza valor no gráfico
+        if(graphic && (*graphic))
+            GRAPHICSCELLS_updateCell(&(*graphic), MATRIX_getRow(cellIndex, (*matrix)->columns),
+                    MATRIX_getColumn(cellIndex,(*matrix)->columns),
+                    (*matrix)->graph.cells[cellIndex]->value, KEEP_MARK, true);
+        return;
+    }
+
     // guarda nome de função que possa existir na expressão
     char function[10];
     // guarda valor numérico que possa existir na expressão
@@ -939,6 +952,9 @@ int MATRIX_redo(Matrix** matrix, UndoRedoCells** undoRedo, GraphicCells** graphi
  */
 int MATRIX_validateExpression(GraphicInstructions** graphic, int rows, int columns,
         const char *expression){
+
+    // expressão vazia é automaticamente aprovada
+    if(strcmp(expression, "")==0) return 1;
 
     if(graphic && (*graphic))
         GRAPHICINST_clear(&(*graphic));

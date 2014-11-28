@@ -355,7 +355,7 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
         GRAPHICINST_writeKeyboard(&graphic_instructions,COLUMN*1, ROW*2, false);
 
         // pega expressão da célula
-        MATRIX_getExpression(&(*matrix),currentRow,currentColumn,expression);
+        MATRIX_getExpression(&newMatrix,currentRow,currentColumn,expression);
         // coloca na tela de expressão
         GRAPHICINST_clear(&graphic_expression);
         GRAPHICINST_write(&graphic_expression, "Expression:",1,1);
@@ -381,7 +381,7 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
                 GRAPHICSCELL_selectCell(&graphic_cells, &currentRow, &currentColumn);
 
                 // pega expressão da célula
-                MATRIX_getExpression(&(*matrix),currentRow,currentColumn,expression);
+                MATRIX_getExpression(&newMatrix,currentRow,currentColumn,expression);
                 // coloca na tela de expressão
                 GRAPHICINST_clear(&graphic_expression);
                 GRAPHICINST_write(&graphic_expression, "Expression:",1,1);
@@ -409,7 +409,7 @@ void SPREADSHEET_run(Matrix** matrix, const char* workspaceName){
                             &graphic_user, &undoRedo);
 
                     // pega expressão da célula
-                    MATRIX_getExpression(&(*matrix),currentRow,currentColumn,expression);
+                    MATRIX_getExpression(&newMatrix,currentRow,currentColumn,expression);
                     // coloca na tela de expressão
                     GRAPHICINST_clear(&graphic_expression);
                     GRAPHICINST_write(&graphic_expression, "Expression:",1,1);
