@@ -656,7 +656,7 @@ void MATRIX_evalCellDepsValue(Matrix** matrix, int cellIndex, int originalCell,
 
     Dependency* dep = NULL;
     if((*matrix)->graph.cells[cellIndex])
-        Dependency* dep = (*matrix)->graph.cells[cellIndex]->first;
+        dep = (*matrix)->graph.cells[cellIndex]->first;
 
     // enquanto o nó de dependência for diferente de nulo...
     while(dep){
