@@ -654,7 +654,10 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphi
 void MATRIX_evalCellDepsValue(Matrix** matrix, int cellIndex, int originalCell,
         GraphicCells** graphic){
 
-    Dependency* dep = (*matrix)->graph.cells[cellIndex]->first;
+    Dependency* dep = NULL;
+    if((*matrix)->graph.cells[cellIndex])
+        Dependency* dep = (*matrix)->graph.cells[cellIndex]->first;
+
     // enquanto o nó de dependência for diferente de nulo...
     while(dep){
         // se o índice da célula dependente for diferente da célula original
