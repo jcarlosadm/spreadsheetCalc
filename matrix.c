@@ -383,6 +383,235 @@ void MATRIX_modDependencies(Matrix** matrix, int cellIndex, const char* expressi
 }
 
 /**
+ * Adiciona valor numérico na pilha de árvore de expressão binária
+ * \return Valor de count atualizado
+ * \param count Contador que permanece no começo do número (ele é atualizado
+ * para o valor de check ao final do algoritmo)
+ * \param expression Expressão que contém a sequência numérica
+ * \param stackBin Ponteiro para pilha de árvore de expressão numérica
+ */
+int MATRIX_pushNumberValue(int count, char* expression,StackBinExpTree** stackBin) {
+    // usa check para percorrer a expressão mantendo count no lugar
+    int check = count;
+
+    // guarda string do número
+    char number_char[60];
+
+    // enquanto for caractere pertencente ao número...
+    while (MATRIX_charIsNumber(expression[check]) || expression[check] == '.') {
+        // vai preenchendo number_char
+        number_char[check - count] = expression[check];
+        check++;
+    }
+    // final de linha
+    number_char[check - count] = 0;
+    // adiciona valor na pilha de expressão binária
+    STACKBINEXPTREE_pushValue(&(*stackBin), atof(number_char));
+    // atualiza count
+    count = check;
+    return count;
+}
+
+/**
+ * Coloca valor da referência na pilha de árvore de expressão binária
+ * \return Valor de count atualizado
+ * \param expression Expressão que contém a referência
+ * \param count Contador que percorre a expressão
+ * \param matrix Ponteiro para a matriz de células
+ * \param stackBin Ponteiro para a pilha de árvores de expressão binária
+ */
+int MATRIX_pushReference(char* expression, int count,
+        Matrix** matrix, StackBinExpTree** stackBin) {
+
+    // pega índice da célula com base na referência
+    int cellTempIndex = MATRIX_getCellIndex_fromReference(expression, &count,
+            (*matrix)->columns);
+    // coloca valor na pilha de expressão binária
+    if (!(*matrix)->graph.cells[cellTempIndex])
+        STACKBINEXPTREE_pushValue(&*stackBin, 0);
+    else
+        STACKBINEXPTREE_pushValue(&*stackBin,
+                (*matrix)->graph.cells[cellTempIndex]->value);
+
+    // vai para o próximo caractere
+    count++;
+    return count;
+}
+
+/**
+ * Adiciona valor da função na pilha de árvore de expressão binária
+ * \return Valor atualizado de count
+ * \param count Contador que percorre a expressão
+ * \param expression Expressão que contém a função
+ * \param matrix Ponteiro para a matriz de células
+ * \param stackBin Ponteiro para a pilha de árvore de expressão binária
+ */
+int MATRIX_pushFunctionValue(int count, char *expression, Matrix** matrix,
+        StackBinExpTree** stackBin) {
+
+    // usa check para percorrer a expressão mantendo count no lugar
+    int check = count;
+
+    // guarda nome da função
+    char function[10];
+    // guarda valor numérico que possa existir na expressão
+    char number_char[60];
+
+    // Lista de valores para computar em uma função
+    ListDouble* list;
+
+    // conta vírgulas
+    int countComma;
+
+    // guarda índice temporário de célula
+    int cellTempIndex;
+
+    // variáveis para computar intervalos
+    // primeira célula e última célula
+    int firstCell, lastCell;
+    // guarda primeira e última linha, primeira e última coluna
+    int firstRow, lastRow, firstColumn, lastColumn;
+    // percorre linha e coluna
+    int countRow, countColumn;
+    // flag que indica qual a célula já computada anteriormente
+    int computeFirstCell;
+
+    // enquanto não encontrar um abre parênteses...
+    while (expression[check] != '(') {
+        // preenche function
+        function[check - count] = expression[check];
+        check++;
+    }
+    // final de linha
+    function[check - count] = 0;
+    // atualiza count para um caractere a mais que check, para pular o parênteses
+    count = check + 1;
+    // cria lista de valores a ser usada com a função
+    list = FUNCTIONS_createList();
+    // inicializa contador de vírgulas
+    countComma = 0;
+    // enquanto o caractere não for fechar parênteses...
+    while (expression[count] != ')') {
+
+        // pula espaços
+        if (expression[count] == ' ') {
+            count++;
+        }
+
+        // pula vírgulas
+        else if (expression[count] == ',') {
+            count++;
+            countComma++;
+        }
+
+        // se encontrou dois pontos, inicializa intervalo
+        else if (expression[count] == ':') {
+            // pula os dois pontos
+            count++;
+            // pula espaços em branco
+            while (expression[count] == ' ')
+                count++;
+
+            // pega segunda referência
+            cellTempIndex = MATRIX_getCellIndex_fromReference(expression,
+                    &count, (*matrix)->columns);
+
+            // verifica qual a referência maior e configura lastCell e firstCell de acordo
+            if (firstCell > cellTempIndex) {
+                lastCell = firstCell;
+                firstCell = cellTempIndex;
+                computeFirstCell = true;
+            } else {
+                lastCell = cellTempIndex;
+                computeFirstCell = false;
+            }
+
+            // configura variáveis de intervalo
+            firstRow = MATRIX_getRow(firstCell, (*matrix)->columns);
+            lastRow = MATRIX_getRow(lastCell, (*matrix)->columns);
+            firstColumn = MATRIX_getColumn(firstCell, (*matrix)->columns);
+            lastColumn = MATRIX_getColumn(lastCell, (*matrix)->columns);
+
+            // percorre intervalo de células
+            for (countRow = firstRow; countRow <= lastRow; countRow++) {
+                for (countColumn = firstColumn; countColumn <= lastColumn;
+                        countColumn++) {
+                    // não computa primeira ou última célula
+                    if ((!computeFirstCell
+                            && (countColumn != firstColumn
+                                    || countRow != firstRow))
+                            || (computeFirstCell
+                                    && (countColumn != lastColumn
+                                            || countRow != lastRow))) {
+                        // pega índice da célula
+                        cellTempIndex = MATRIX_evalCellIndex(countRow,
+                                countColumn, (*matrix)->columns);
+                        // adiciona na lista da função
+                        if (!(*matrix)->graph.cells[cellTempIndex])
+                            list = FUNCTIONS_addValue(list, 0);
+                        else
+                            list =
+                                    FUNCTIONS_addValue(list,
+                                            (*matrix)->graph.cells[cellTempIndex]->value);
+                    }
+                }
+            }
+            // pula para o próximo caractere
+            count++;
+        }
+
+        // uma referência de célula
+        else if (MATRIX_charIsAlpha(expression[count])
+                && MATRIX_charIsNumber(expression[count + 1])) {
+
+            // pega índice da célula no grafo
+            cellTempIndex = MATRIX_getCellIndex_fromReference(expression,
+                    &count, (*matrix)->columns);
+            // adiciona valor na lista
+            if (!(*matrix)->graph.cells[cellTempIndex])
+                list = FUNCTIONS_addValue(list, 0);
+            else
+                list = FUNCTIONS_addValue(list,
+                        (*matrix)->graph.cells[cellTempIndex]->value);
+
+            // se não encontrou vírgula, é possível primeira célula de um intervalo
+            if (!countComma)
+                firstCell = cellTempIndex;
+
+            // pula para o próximo caractere
+            count++;
+        }
+        // um número
+        else {
+            // usa variável check para percorrer expressão mantendo count no lugar
+            check = count;
+
+            // enquanto não encontrar vírgula ou parênteses...
+            while (expression[check] != ',' && expression[check] != ')') {
+                // preenche number_char
+                number_char[check - count] = expression[check];
+                check++;
+            }
+            // final de linha
+            number_char[check - count] = 0;
+            // adiciona valor na lista (converte number_char para double)
+            list = FUNCTIONS_addValue(list, atof(number_char));
+
+            // atualiza count
+            count = check;
+        }
+    }
+    // pula para o próximo caractere (que está em um fecha parênteses)
+    count++;
+    // adiciona resultado da função na pilha de árvore de expressão binária
+    STACKBINEXPTREE_pushValue(&*stackBin,
+            FUNCTIONS_evalFunction(function, &list));
+    // libera fila de valores doubles
+    list = FUNCTIONS_free(list);
+    return count;
+}
+
+/**
  * Computa o valor da célula
  * \param matrix Ponteiro duplo para matriz de células
  * \param cellIndex Índice da célula no grafo que terá o valor atualizado
@@ -408,35 +637,11 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphi
         return;
     }
 
-    // guarda nome de função que possa existir na expressão
-    char function[10];
-    // guarda valor numérico que possa existir na expressão
-    char number_char[60];
-
-    // guarda índice temporário de célula
-    int cellTempIndex;
-
-    // Lista de valores para computar em uma função
-    ListDouble* list;
-
     // Pilha de árvore de expressão binária
     StackBinExpTree* stackBin = STACKBINEXPTREE_create();
 
-    // conta quantidade de vírgulas em uma função
-    int countComma;
-
-    // variáveis para computar intervalos
-    // primeira célula e última célula
-    int firstCell, lastCell;
-    // guarda primeira e última linha, primeira e última coluna
-    int firstRow, lastRow, firstColumn, lastColumn;
-    // percorre linha e coluna
-    int countRow, countColumn;
-    // flag que indica qual a célula já computada anteriormente
-    int computeFirstCell;
-
     // percorre expressão
-    int count=0, check;
+    int count=0;
     while(expression[count] != 0){
 
         // pula espaços em branco
@@ -454,179 +659,27 @@ void MATRIX_evalCellValue(Matrix ** matrix, int cellIndex, GraphicCells** graphi
 
         // número
         else if(MATRIX_charIsNumber(expression[count])){
-            // usa check para percorrer a expressão mantendo count no lugar
-            check = count;
-            // enquanto for caractere pertencente ao número...
-            while(MATRIX_charIsNumber(expression[check]) || expression[check]=='.'){
-                // vai preenchendo number_char
-                number_char[check-count]=expression[check];
-                check++;
-            }
-            // final de linha
-            number_char[check-count]=0;
-
-            // adiciona valor na pilha de expressão binária
-            STACKBINEXPTREE_pushValue(&stackBin, atof(number_char));
-
+            // coloca valor numérico na pilha de árvore de expressão binário e
             // atualiza count
-            count = check;
+            count = MATRIX_pushNumberValue(count, expression,&stackBin);
         }
 
         // referência para uma célula
         else if(MATRIX_charIsAlpha(expression[count]) && expression[count+1]!=0
                 && MATRIX_charIsNumber(expression[count+1]) ){
 
-            // pega índice da célula com base na referência
-            cellTempIndex = MATRIX_getCellIndex_fromReference(expression, &count,
-                    (*matrix)->columns);
-
-            // coloca valor na pilha de expressão binária
-            if(!(*matrix)->graph.cells[cellTempIndex])
-                STACKBINEXPTREE_pushValue(&stackBin, 0);
-            else
-                STACKBINEXPTREE_pushValue(&stackBin,
-                        (*matrix)->graph.cells[cellTempIndex]->value);
-            // vai para o próximo caractere
-            count++;
+            // coloca valor da referência na pilha de árvore de expressão binária
+            // e atualiza valor de count
+            count = MATRIX_pushReference(expression, count,
+                    &(*matrix), &stackBin);
         }
 
         // função
         else{
-
-            // usa check para percorrer a expressão mantendo count no lugar
-            check=count;
-            // enquanto não encontrar um abre parênteses...
-            while(expression[check]!='('){
-                // preenche function
-                function[check-count] = expression[check];
-                check++;
-            }
-
-            // final de linha
-            function[check-count]=0;
-
-            // atualiza count para um caractere a mais que check, para pular o parênteses
-            count=check+1;
-            // cria lista de valores a ser usada com a função
-            list = FUNCTIONS_createList();
-
-            // inicializa contador de vírgulas
-            countComma=0;
-
-            // enquanto o caractere não for fechar parênteses...
-            while(expression[count]!=')'){
-
-                // pula espaços
-                if(expression[count]==' '){
-                    count++;
-                }
-
-                // pula vírgulas
-                else if(expression[count]==','){
-                    count++;
-                    countComma++;
-                }
-
-                // se encontrou dois pontos, inicializa intervalo
-                else if(expression[count]==':'){
-                    // pula os dois pontos
-                    count++;
-                    // pula espaços em branco
-                    while(expression[count]==' ')
-                        count++;
-
-                    // pega segunda referência
-                    cellTempIndex = MATRIX_getCellIndex_fromReference(expression, &count,
-                            (*matrix)->columns);
-
-                    // verifica qual a referência maior e configura lastCell e firstCell de acordo
-                    if(firstCell > cellTempIndex){
-                        lastCell = firstCell;
-                        firstCell = cellTempIndex;
-                        computeFirstCell = true;
-                    }else{
-                        lastCell = cellTempIndex;
-                        computeFirstCell=false;
-                    }
-
-                    // configura variáveis de intervalo
-                    firstRow = MATRIX_getRow(firstCell,(*matrix)->columns);
-                    lastRow = MATRIX_getRow(lastCell,(*matrix)->columns);
-                    firstColumn = MATRIX_getColumn(firstCell, (*matrix)->columns);
-                    lastColumn = MATRIX_getColumn(lastCell, (*matrix)->columns);
-
-                    // percorre intervalo de células
-                    for(countRow = firstRow; countRow<=lastRow; countRow++){
-                        for(countColumn = firstColumn; countColumn <= lastColumn; countColumn++){
-                            // não computa primeira ou última célula
-                            if((!computeFirstCell && (countColumn!=firstColumn ||
-                                    countRow!=firstRow))
-                                || (computeFirstCell
-                                    && ( countColumn!=lastColumn || countRow!=lastRow ))){
-                                // pega índice da célula
-                                cellTempIndex = MATRIX_evalCellIndex(countRow, countColumn,
-                                        (*matrix)->columns);
-                                // adiciona na lista da função
-                                if(!(*matrix)->graph.cells[cellTempIndex])
-                                    list = FUNCTIONS_addValue(list, 0);
-                                else
-                                    list = FUNCTIONS_addValue(list,
-                                            (*matrix)->graph.cells[cellTempIndex]->value);
-                            }
-                        }
-                    }
-                    // pula para o próximo caractere
-                    count++;
-                }
-
-                // uma referência de célula
-                else if(MATRIX_charIsAlpha(expression[count])
-                        && MATRIX_charIsNumber(expression[count+1])){
-
-                    // pega índice da célula no grafo
-                    cellTempIndex = MATRIX_getCellIndex_fromReference(expression, &count,
-                            (*matrix)->columns);
-                    // adiciona valor na lista
-                    if(!(*matrix)->graph.cells[cellTempIndex])
-                        list = FUNCTIONS_addValue(list, 0);
-                    else
-                        list = FUNCTIONS_addValue(list,
-                                (*matrix)->graph.cells[cellTempIndex]->value);
-
-                    // se não encontrou vírgula, é possível primeira célula de um intervalo
-                    if(!countComma)
-                        firstCell = cellTempIndex;
-
-                    // pula para o próximo caractere
-                    count++;
-                }
-                // um número
-                else{
-                    // usa variável check para percorrer expressão mantendo count no lugar
-                    check = count;
-
-                    // enquanto não encontrar vírgula ou parênteses...
-                    while(expression[check]!=',' && expression[check]!=')'){
-                        // preenche number_char
-                        number_char[check-count]=expression[check];
-                        check++;
-                    }
-                    // final de linha
-                    number_char[check-count]=0;
-                    // adiciona valor na lista (converte number_char para double)
-                    list = FUNCTIONS_addValue(list, atof(number_char));
-
-                    // atualiza count
-                    count = check;
-                }
-            }
-            // pula para o próximo caractere (que está em um fecha parênteses)
-            count++;
-
-            // adiciona resultado da função na pilha de árvore de expressão binária
-            STACKBINEXPTREE_pushValue(&stackBin, FUNCTIONS_evalFunction(function, &list));
-            // libera fila de valores doubles
-            list = FUNCTIONS_free(list);
+            // Coloca valor da função na pilha de árvore de expressão binária
+            // e atualiza count
+            count = MATRIX_pushFunctionValue(count, expression,&(*matrix),
+                    &stackBin);
         }
     }
 
