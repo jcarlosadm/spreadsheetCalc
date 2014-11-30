@@ -283,6 +283,75 @@ void MATRIX_addDependency(Cell** cell, int value){
 }
 
 /**
+ * Extrai dependências de um intervalo, adicionando ou removendo essas dependências
+ * \return Valor atualizado de count
+ * \param count Contador que percorre expressão
+ * \param expression Expressão que contém o intervalo
+ * \param isRemove define se adiciona ou remove a dependência encontrada
+ * \param cellIndex Índice da célula que será adicionada/removida da lista
+ * de dependências da célula de destino
+ * \param matrix Ponteiro para a matriz de células
+ * \param firstCell Valor da primeira célula do intervalo (já computada)
+ */
+int MATRIX_extractDepsFromInterval(int count, const char* expression, int isRemove,
+        int cellIndex, Matrix** matrix, int firstCell) {
+
+    // última célula do intervalo
+    int lastCell;
+    // flag que indica qual a célula já computada anteriormente
+    int computeFirstCell;
+
+    // percorre linha e coluna
+    int countRow, countColumn;
+
+    // pula os dois pontos
+    count++;
+    // pula espaços em branco
+    while (expression[count] == ' ')
+        count++;
+    // pega segunda referência
+    int cellDestiny = MATRIX_getCellIndex_fromReference(expression, &count,
+            (*matrix)->columns);
+    // verifica qual a referência maior e configura lastCell e firstCell de acordo
+    if (firstCell > cellDestiny) {
+        lastCell = firstCell;
+        firstCell = cellDestiny;
+        computeFirstCell = true;
+    } else {
+        lastCell = cellDestiny;
+        computeFirstCell = false;
+    }
+    // configura variáveis de intervalo
+    int firstRow = MATRIX_getRow(firstCell, (*matrix)->columns);
+    int lastRow = MATRIX_getRow(lastCell, (*matrix)->columns);
+    int firstColumn = MATRIX_getColumn(firstCell, (*matrix)->columns);
+    int lastColumn = MATRIX_getColumn(lastCell, (*matrix)->columns);
+    // percorre intervalo de células
+    for (countRow = firstRow; countRow <= lastRow; countRow++) {
+        for (countColumn = firstColumn; countColumn <= lastColumn; countColumn++) {
+            // não computa primeira ou última célula
+            if ((!computeFirstCell
+                    && (countColumn != firstColumn || countRow != firstRow))
+                    || (computeFirstCell
+                            && (countColumn != lastColumn
+                                    || countRow != lastRow))) {
+                // pega índice da célula
+                cellDestiny = MATRIX_evalCellIndex(countRow, countColumn,
+                        (*matrix)->columns);
+                // remove ou adiciona
+                if (isRemove)
+                    MATRIX_removeDependency(
+                            &((*matrix)->graph.cells[cellDestiny]), cellIndex);
+                else
+                    MATRIX_addDependency(&((*matrix)->graph.cells[cellDestiny]),
+                            cellIndex);
+            }
+        }
+    }
+    return count;
+}
+
+/**
  * Remove ou adiciona todas as dependências em relação a uma célula específica,
  * com base na expressão
  * \param matrix Ponteiro duplo para a matriz de células
@@ -295,14 +364,8 @@ void MATRIX_modDependencies(Matrix** matrix, int cellIndex, const char* expressi
         int isRemove){
 
     // variáveis para computar intervalos
-    // primeira célula e última célula
-    int firstCell, lastCell;
-    // guarda primeira e última linha, primeira e última coluna
-    int firstRow, lastRow, firstColumn, lastColumn;
-    // percorre linha e coluna
-    int countRow, countColumn;
-    // flag que indica qual a célula já computada anteriormente
-    int computeFirstCell;
+    // primeira célula
+    int firstCell;
 
     int count=0, cellDestiny;
     // percorre a expressão
@@ -310,53 +373,9 @@ void MATRIX_modDependencies(Matrix** matrix, int cellIndex, const char* expressi
 
         // se encontrou dois pontos, então computa intervalo
         if(expression[count]==':'){
-            // pula os dois pontos
-            count++;
-            // pula espaços em branco
-            while(expression[count]==' ')
-                count++;
-
-            // pega segunda referência
-            cellDestiny = MATRIX_getCellIndex_fromReference(expression, &count,
-                    (*matrix)->columns);
-
-            // verifica qual a referência maior e configura lastCell e firstCell de acordo
-            if(firstCell > cellDestiny){
-                lastCell = firstCell;
-                firstCell = cellDestiny;
-                computeFirstCell = true;
-            }else{
-                lastCell = cellDestiny;
-                computeFirstCell=false;
-            }
-
-            // configura variáveis de intervalo
-            firstRow = MATRIX_getRow(firstCell,(*matrix)->columns);
-            lastRow = MATRIX_getRow(lastCell,(*matrix)->columns);
-            firstColumn = MATRIX_getColumn(firstCell, (*matrix)->columns);
-            lastColumn = MATRIX_getColumn(lastCell, (*matrix)->columns);
-
-            // percorre intervalo de células
-            for(countRow = firstRow; countRow<=lastRow; countRow++){
-                for(countColumn = firstColumn; countColumn <= lastColumn; countColumn++){
-                    // não computa primeira ou última célula
-                    if((!computeFirstCell && (countColumn!=firstColumn || countRow!=firstRow))
-                        || (computeFirstCell
-                            && ( countColumn!=lastColumn || countRow!=lastRow ))){
-                        // pega índice da célula
-                        cellDestiny = MATRIX_evalCellIndex(countRow, countColumn,
-                                (*matrix)->columns);
-
-                        // remove ou adiciona
-                        if(isRemove)
-                            MATRIX_removeDependency(&((*matrix)->graph.cells[cellDestiny]),
-                                    cellIndex);
-                        else
-                            MATRIX_addDependency(&((*matrix)->graph.cells[cellDestiny]),
-                                    cellIndex);
-                    }
-                }
-            }
+            // extrair dependências do intervalo e atualiza contador
+            count = MATRIX_extractDepsFromInterval(count, expression,isRemove, cellIndex,
+                    &(*matrix),firstCell);
         }
 
         // faz comparações com base na table ascii
