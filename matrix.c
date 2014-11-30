@@ -439,6 +439,137 @@ int MATRIX_pushReference(char* expression, int count,
 }
 
 /**
+ * Extrai lista de valores de uma sequência de referências
+ * \return Valor atualizado de count
+ * \param count Contador que percorre a expressão
+ * \param expression Expressão que contém o intervalo
+ * \param matrix Ponteiro para a matriz de células
+ * \param firstCell Índice da primeira célula do intervalo no grafo (já computada)
+ * \param list Lista de valores a ser computada na função posteriormente
+ */
+int MATRIX_extractList(int count, char* expression, Matrix** matrix, int firstCell,
+        ListDouble** list) {
+
+    // flag que indica qual a célula já computada anteriormente
+    int computeFirstCell;
+
+    // última célula do intervalo
+    int lastCell;
+
+    // contadores de linha e coluna
+    int countRow, countColumn;
+
+    // pula os dois pontos
+    count++;
+    // pula espaços em branco
+    while (expression[count] == ' ')
+        count++;
+    // pega segunda referência
+    int cellTempIndex = MATRIX_getCellIndex_fromReference(expression, &count,
+            (*matrix)->columns);
+
+    // verifica qual a referência maior e configura lastCell e firstCell de acordo
+    if (firstCell > cellTempIndex) {
+        lastCell = firstCell;
+        firstCell = cellTempIndex;
+        computeFirstCell = true;
+    } else {
+        lastCell = cellTempIndex;
+        computeFirstCell = false;
+    }
+    // configura variáveis de intervalo
+    int firstRow = MATRIX_getRow(firstCell, (*matrix)->columns);
+    int lastRow = MATRIX_getRow(lastCell, (*matrix)->columns);
+    int firstColumn = MATRIX_getColumn(firstCell, (*matrix)->columns);
+    int lastColumn = MATRIX_getColumn(lastCell, (*matrix)->columns);
+    // percorre intervalo de células
+    for (countRow = firstRow; countRow <= lastRow; countRow++) {
+        for (countColumn = firstColumn; countColumn <= lastColumn;countColumn++) {
+            // não computa primeira ou última célula
+            if ((!computeFirstCell
+                    && (countColumn != firstColumn || countRow != firstRow))
+                    || (computeFirstCell
+                            && (countColumn != lastColumn
+                                    || countRow != lastRow))) {
+                // pega índice da célula
+                cellTempIndex = MATRIX_evalCellIndex(countRow, countColumn,
+                        (*matrix)->columns);
+                // adiciona na lista da função
+                if (!(*matrix)->graph.cells[cellTempIndex])
+                    *list = FUNCTIONS_addValue(*list, 0);
+                else
+                    *list = FUNCTIONS_addValue(*list,
+                            (*matrix)->graph.cells[cellTempIndex]->value);
+            }
+        }
+    }
+    // pula para o próximo caractere
+    count++;
+    return count;
+}
+
+/**
+ * Adiciona valor da referência na lista que será usada para computar valor da função
+ * \return Valor atualizado de count
+ * \param count Contador que percorrre a expressão
+ * \param countComma Conta quantas vírgulas já apareceram na função
+ * \param expression Expressão que contém o número
+ * \param matrix Ponteiro para a matriz de células
+ * \param list Lista de valores a ser computada pela função posteriormente
+ * \param firstCell Guarda índice da primeira célula
+ */
+int MATRIX_pushReferenceToList(int count, int countComma,char* expression,
+        Matrix** matrix, ListDouble** list, int* firstCell) {
+
+    // pega índice da célula no grafo
+    int cellTempIndex = MATRIX_getCellIndex_fromReference(expression, &count,
+            (*matrix)->columns);
+    // adiciona valor na lista
+    if (!(*matrix)->graph.cells[cellTempIndex])
+        *list = FUNCTIONS_addValue(*list, 0);
+    else
+        *list = FUNCTIONS_addValue(*list,
+                (*matrix)->graph.cells[cellTempIndex]->value);
+
+    // se não encontrou vírgula, é possível primeira célula de um intervalo
+    if (!countComma)
+        *firstCell = cellTempIndex;
+
+    // pula para o próximo caractere
+    count++;
+    return count;
+}
+
+/**
+ * Adiciona valor numérico na lista que será posteriormente processada pela função
+ * \return Valor atualizado de count
+ * \param count Contador que percorre a expressão
+ * \param expression Expressão que possui o valor numérico
+ * \para list Lista de valores a ser posteriormente processada pela função
+ */
+int MATRIX_pushNumberToList(int count, char* expression, ListDouble** list) {
+    // usa variável check para percorrer expressão mantendo count no lugar
+    int check = count;
+
+    // guarda valor numérico que possa existir na expressão
+    char number_char[60];
+
+    // enquanto não encontrar vírgula ou parênteses...
+    while (expression[check] != ',' && expression[check] != ')') {
+        // preenche number_char
+        number_char[check - count] = expression[check];
+        check++;
+    }
+    // final de linha
+    number_char[check - count] = 0;
+    // adiciona valor na lista (converte number_char para double)
+    *list = FUNCTIONS_addValue(*list, atof(number_char));
+    // atualiza count
+    count = check;
+    return count;
+}
+
+/**
  * Adiciona valor da função na pilha de árvore de expressão binária
  * \return Valor atualizado de count
  * \param count Contador que percorre a expressão
@@ -454,8 +585,6 @@ int MATRIX_pushFunctionValue(int count, char *expression, Matrix** matrix,
 
     // guarda nome da função
     char function[10];
-    // guarda valor numérico que possa existir na expressão
-    char number_char[60];
 
     // Lista de valores para computar em uma função
     ListDouble* list;
@@ -463,18 +592,9 @@ int MATRIX_pushFunctionValue(int count, char *expression, Matrix** matrix,
     // conta vírgulas
     int countComma;
 
-    // guarda índice temporário de célula
-    int cellTempIndex;
-
     // variáveis para computar intervalos
-    // primeira célula e última célula
-    int firstCell, lastCell;
-    // guarda primeira e última linha, primeira e última coluna
-    int firstRow, lastRow, firstColumn, lastColumn;
-    // percorre linha e coluna
-    int countRow, countColumn;
-    // flag que indica qual a célula já computada anteriormente
-    int computeFirstCell;
+    // primeira célula
+    int firstCell;
 
     // enquanto não encontrar um abre parênteses...
     while (expression[check] != '(') {
@@ -486,6 +606,7 @@ int MATRIX_pushFunctionValue(int count, char *expression, Matrix** matrix,
     function[check - count] = 0;
     // atualiza count para um caractere a mais que check, para pular o parênteses
     count = check + 1;
+
     // cria lista de valores a ser usada com a função
     list = FUNCTIONS_createList();
     // inicializa contador de vírgulas
@@ -506,99 +627,22 @@ int MATRIX_pushFunctionValue(int count, char *expression, Matrix** matrix,
 
         // se encontrou dois pontos, inicializa intervalo
         else if (expression[count] == ':') {
-            // pula os dois pontos
-            count++;
-            // pula espaços em branco
-            while (expression[count] == ' ')
-                count++;
-
-            // pega segunda referência
-            cellTempIndex = MATRIX_getCellIndex_fromReference(expression,
-                    &count, (*matrix)->columns);
-
-            // verifica qual a referência maior e configura lastCell e firstCell de acordo
-            if (firstCell > cellTempIndex) {
-                lastCell = firstCell;
-                firstCell = cellTempIndex;
-                computeFirstCell = true;
-            } else {
-                lastCell = cellTempIndex;
-                computeFirstCell = false;
-            }
-
-            // configura variáveis de intervalo
-            firstRow = MATRIX_getRow(firstCell, (*matrix)->columns);
-            lastRow = MATRIX_getRow(lastCell, (*matrix)->columns);
-            firstColumn = MATRIX_getColumn(firstCell, (*matrix)->columns);
-            lastColumn = MATRIX_getColumn(lastCell, (*matrix)->columns);
-
-            // percorre intervalo de células
-            for (countRow = firstRow; countRow <= lastRow; countRow++) {
-                for (countColumn = firstColumn; countColumn <= lastColumn;
-                        countColumn++) {
-                    // não computa primeira ou última célula
-                    if ((!computeFirstCell
-                            && (countColumn != firstColumn
-                                    || countRow != firstRow))
-                            || (computeFirstCell
-                                    && (countColumn != lastColumn
-                                            || countRow != lastRow))) {
-                        // pega índice da célula
-                        cellTempIndex = MATRIX_evalCellIndex(countRow,
-                                countColumn, (*matrix)->columns);
-                        // adiciona na lista da função
-                        if (!(*matrix)->graph.cells[cellTempIndex])
-                            list = FUNCTIONS_addValue(list, 0);
-                        else
-                            list =
-                                    FUNCTIONS_addValue(list,
-                                            (*matrix)->graph.cells[cellTempIndex]->value);
-                    }
-                }
-            }
-            // pula para o próximo caractere
-            count++;
+            // extrai lista de valores e atualiza valor do contador
+            count = MATRIX_extractList(count,expression, &(*matrix), firstCell, &list);
         }
 
         // uma referência de célula
         else if (MATRIX_charIsAlpha(expression[count])
                 && MATRIX_charIsNumber(expression[count + 1])) {
 
-            // pega índice da célula no grafo
-            cellTempIndex = MATRIX_getCellIndex_fromReference(expression,
-                    &count, (*matrix)->columns);
-            // adiciona valor na lista
-            if (!(*matrix)->graph.cells[cellTempIndex])
-                list = FUNCTIONS_addValue(list, 0);
-            else
-                list = FUNCTIONS_addValue(list,
-                        (*matrix)->graph.cells[cellTempIndex]->value);
-
-            // se não encontrou vírgula, é possível primeira célula de um intervalo
-            if (!countComma)
-                firstCell = cellTempIndex;
-
-            // pula para o próximo caractere
-            count++;
+            // Adiciona valor da referência na lista e atualiza count
+            count = MATRIX_pushReferenceToList(count, countComma,
+                    expression, matrix, &list, &firstCell);
         }
         // um número
         else {
             // usa variável check para percorrer expressão mantendo count no lugar
-            check = count;
-
-            // enquanto não encontrar vírgula ou parênteses...
-            while (expression[check] != ',' && expression[check] != ')') {
-                // preenche number_char
-                number_char[check - count] = expression[check];
-                check++;
-            }
-            // final de linha
-            number_char[check - count] = 0;
-            // adiciona valor na lista (converte number_char para double)
-            list = FUNCTIONS_addValue(list, atof(number_char));
-
-            // atualiza count
-            count = check;
+            count = MATRIX_pushNumberToList(count,expression, &list);
         }
     }
     // pula para o próximo caractere (que está em um fecha parênteses)
