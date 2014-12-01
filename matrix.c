@@ -1041,7 +1041,8 @@ int MATRIX_VAL_checkFunction(const char *expression, int *count, int charLimitCa
     // guarda o tipo do primeiro argumento de uma função
     // se 'n', é número
     // se 'r', é referência
-    char typeFirstArgument;
+    // se '-', nem número nem referência foi lida ainda
+    char typeFirstArgument = '-';
 
     // usa check para percorrer a expressão mantendo count no lugar
     int check=*count;
@@ -1080,8 +1081,8 @@ int MATRIX_VAL_checkFunction(const char *expression, int *count, int charLimitCa
 
         // pula vírgulas
         if(expression[*count]==','){
-            // se já foi usado dois pontos, erro
-            if(countColon){
+            // se já foi usado dois pontos ou primeiro argumento é '-', erro
+            if(countColon || typeFirstArgument == '-'){
                 sprintf(message,"expressao inadequada na funcao %s",function);
                 MATRIX_showError(&(*graphic), message, 0,"");
                 return 0;
@@ -1094,8 +1095,8 @@ int MATRIX_VAL_checkFunction(const char *expression, int *count, int charLimitCa
 
         // pula dois pontos
         if(expression[*count]==':'){
-            // se já foi usado vírgula ou dois pontos, erro
-            if(countComma || countColon){
+            // se já foi usado vírgula ou dois pontos ou primeiro argumento é '-', erro
+            if(countComma || countColon || typeFirstArgument=='-'){
                 sprintf(message,"expressao inadequada na funcao %s",function);
                 MATRIX_showError(&(*graphic), message, 0,"");
                 return 0;
