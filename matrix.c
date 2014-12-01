@@ -1522,9 +1522,6 @@ int MATRIX_checkCyclicDependency(int row, int column, const char* expression, Ma
     // flag que indica qual a célula já computada anteriormente
     int computeFirstCell;
 
-    // guarda o resultado da chamada de função recursiva para verificação de dependências cíclicas
-    int result;
-
     int count=0, cellDestiny;
     // percorre a expressão
     while(expression[count]!=0){
@@ -1569,24 +1566,20 @@ int MATRIX_checkCyclicDependency(int row, int column, const char* expression, Ma
                                 (*matrix)->columns);
 
                         // se a célula destino for a própria célula, erro
-                        if(cellIndex == cellDestiny){
+                        if(cellIndex == cellDestiny)
                             return 1;
-                        }
 
                         // percorre dependências da célula
                         if((*matrix)->graph.cells[cellIndex]){
                             cellDependency = (*matrix)->graph.cells[cellIndex]->first;
                             while(cellDependency){
                                 // se a dependência atual bate com o índice da célula atual, erro
-                                if(cellDependency->value == cellDestiny){
+                                if(cellDependency->value == cellDestiny)
                                     return 1;
-                                }
-                                // chama função recursiva para checar na célula dependente
-                                result = MATRIX_checkCyclicDependencyRecursive(cellDependency->value,
-                                        cellDestiny, &(*matrix));
 
-                                // encontrou dependência cíclica
-                                if(result) return 1;
+                                // chama função recursiva para checar na célula dependente
+                                if(MATRIX_checkCyclicDependencyRecursive(cellDependency->value,
+                                        cellDestiny, &(*matrix))) return 1;
 
                                 cellDependency = cellDependency->next;
                             }
@@ -1606,24 +1599,20 @@ int MATRIX_checkCyclicDependency(int row, int column, const char* expression, Ma
                     (*matrix)->columns);
 
             // se a célula destino for a própria célula, erro
-            if(cellIndex == cellDestiny){
+            if(cellIndex == cellDestiny)
                 return 1;
-            }
 
             // percorre dependências da célula
             if((*matrix)->graph.cells[cellIndex]){
                 cellDependency = (*matrix)->graph.cells[cellIndex]->first;
                 while(cellDependency){
                     // se a dependência atual bate com o índice da célula atual, erro
-                    if(cellDependency->value == cellDestiny){
+                    if(cellDependency->value == cellDestiny)
                         return 1;
-                    }
-                    // chama função recursiva para checar na célula dependente
-                    result = MATRIX_checkCyclicDependencyRecursive(cellDependency->value,
-                            cellDestiny, &(*matrix));
 
-                    // encontrou dependência cíclica
-                    if(result) return 1;
+                    // chama função recursiva para checar na célula dependente
+                    if(MATRIX_checkCyclicDependencyRecursive(cellDependency->value,
+                            cellDestiny, &(*matrix))) return 1;
 
                     cellDependency = cellDependency->next;
                 }
